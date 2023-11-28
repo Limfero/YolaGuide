@@ -3,7 +3,8 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
+using YolaGuide.Settings;
+using YolaGuide.Domain.Enums;
 
 namespace YolaGuide
 {
@@ -11,6 +12,7 @@ namespace YolaGuide
     {
         private static readonly string _token = "6749828476:AAFa3mJUnpiX_9yC2-SUReuxzoSVIqM6Rh4";
         private static ITelegramBotClient? _botClient;
+        private static Language _language = Language.Russian;
 
         public static async Task Main()
         {
@@ -32,7 +34,7 @@ namespace YolaGuide
 
             var me = await _botClient.GetMeAsync();
 
-            Console.WriteLine($"Start listening for @{me.Username}");
+            Console.WriteLine($"Старт бота под имененем @{me.Username}");
             Console.ReadLine();
 
             cancellationTokenSource.Cancel();
@@ -40,32 +42,39 @@ namespace YolaGuide
 
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            if (update.Message is not { } message)
-                return;
-
-            if (message.Text is not { } messageText)
-                return;
-
-            var chatId = message.Chat.Id;
-
-            switch (messageText.ToLower())
+            try
             {
-                case "/start":
-                    await botClient.SendTextMessageAsync(
-                       chatId: chatId,
-                       text: "Выбоооооор",
-                       cancellationToken: cancellationToken,
-                       replyMarkup: GetKeyboard());
-                    break;
-                default:
-                    await botClient.SendTextMessageAsync(
-                        chatId: chatId,
-                        text: "К сожалению, я ещё тупенький и не знаю этой команды",
-                        cancellationToken: cancellationToken);
-                    break;
-            }
+                switch (update.Type)
+                {
+                    case UpdateType.Message:
+                        var message = update.Message;
+                        var chatId = message.Chat.Id;
+                        switch (message.Type)
+                        {
+                            case MessageType.Text:
+                                await ReplyToTextMessage(botClient, message, cancellationToken);
+                                return;
+                            default:
+                                await botClient.SendTextMessageAsync(
+                                   chatId: chatId,
+                                   text: "Красивое... Но, к сожалению, я понимаю только текст :с",
+                                   cancellationToken: cancellationToken);
+                                break;
+                        }
+                        return;
 
-            Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
+                    case UpdateType.CallbackQuery:
+                        await ReplyToCallbackQuery(botClient, update, cancellationToken);
+                        return;
+                    default:
+                        break;
+                    
+                }   
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибочка: {ex}");
+            }
         }
 
         public static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -81,21 +90,59 @@ namespace YolaGuide
             return Task.CompletedTask;
         }
 
-        private static InlineKeyboardMarkup GetKeyboard()
+        private static async Task ReplyToTextMessage(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
         {
-            return new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>() 
+            var chatId = message.Chat.Id;
+            var messageText = message.Text;
+
+            Console.WriteLine($"Получено сообщение '{messageText}' в чате {chatId} от {message.Chat.FirstName}.");
+
+            switch (messageText.ToLower())
             {
-                new InlineKeyboardButton[]
-                {
-                    InlineKeyboardButton.WithUrl("Ссылка на ПГТУ!", "https://yandex.ru/maps/org/203257135115"),
-                    InlineKeyboardButton.WithCallbackData("А это просто кнопка", "button1"),
-                },
-                new InlineKeyboardButton[]
-                {
-                    InlineKeyboardButton.WithCallbackData("Тут еще одна", "button2"),
-                    InlineKeyboardButton.WithCallbackData("И здесь", "button3"),
-                },
-            });
+                case "/start":                  
+                    await botClient.SendTextMessageAsync(
+                       chatId: chatId,
+                       text: "Выберете язык:\nSelect a language:",
+                       cancellationToken: cancellationToken,
+                       replyMarkup: Keyboard.LanguageChangeKeyboard);
+
+                    return;
+                default:
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: "К сожалению, я ещё тупенький и не знаю этой команды",
+                        cancellationToken: cancellationToken);
+                    return;
+            }
+        }
+
+        private static async Task ReplyToCallbackQuery(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        {
+            var callbackQuery = update.CallbackQuery;
+            await botClient.AnswerCallbackQueryAsync(callbackQuery.Id, cancellationToken: cancellationToken);
+
+            switch (callbackQuery.Data)
+            {
+                case "English":
+                case "Русский":
+                    if (callbackQuery.Data == "English")
+                        _language = Language.English;
+                    else
+                        _language = Language.Russian;
+
+                    await SendWelcomeMessage(botClient, callbackQuery.Message.Chat.Id, _language, cancellationToken);
+                    return;
+            }
+            return;
+        }
+
+        private static async Task SendWelcomeMessage(ITelegramBotClient botClient, long chatId, Language language, CancellationToken cancellationToken)
+        {
+            await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.WelcomeMessage[(int)language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.GetStartKeyboard(language));
         }
     }
 }
