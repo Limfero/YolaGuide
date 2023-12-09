@@ -1,10 +1,16 @@
-﻿namespace YolaGuide.Domain.Entity
+﻿using YolaGuide.Domain.Enums;
+
+namespace YolaGuide.Domain.Entity
 {
     public class User
     {
         public long Id { get; set; }
 
         public string Username { get; set; }
+
+        public State State { get; set; }
+
+        public StateAdd StateAdd { get; set; }
 
         public List<Place> Places { get; set; } = new();
 

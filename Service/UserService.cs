@@ -15,7 +15,9 @@ namespace YolaGuide.Service
                 var user = new User()
                 {
                     Id = model.Id,
-                    Username = model.Username
+                    Username = model.Username,
+                    State = State.Start,
+                    StateAdd = StateAdd.Start,
                 };
 
                 var response = await userRepository.CreateAsync(user);

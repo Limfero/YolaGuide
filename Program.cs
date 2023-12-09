@@ -20,10 +20,8 @@ namespace YolaGuide
 
         private static ITelegramBotClient? _botClient;
         private static Language _language = Language.Russian;
-        private static State _state = State.Start;
-        private static StateAdd _stateAdd = StateAdd.Start;
 
-        private static Place _newPlace = new();
+        private static Dictionary<long, Place> _newUserPlaces = new();
 
         public static async Task Main()
         {
@@ -60,14 +58,15 @@ namespace YolaGuide
                     case UpdateType.Message:
                         var message = update.Message;
                         var chatId = update.Message.Chat.Id;
+                        var user = UserService.GetUsers(_userRepository).Data.FirstOrDefault(user => user.Id == chatId);
 
-                        if (UserService.GetUsers(_userRepository).Data.FirstOrDefault(user => user.Id == chatId) == null)
+                        if (user == null)
                             await UserService.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = update.Message.Chat.Username }, _userRepository);
 
                         switch (message.Type)
                         {
                             case MessageType.Text:
-                                await ReplyToTextMessage(botClient, message, cancellationToken);
+                                await ReplyToTextMessage(botClient, message, cancellationToken, user);
                                 return;
                             default:
                                 await botClient.SendTextMessageAsync(
@@ -79,7 +78,9 @@ namespace YolaGuide
                         return;
 
                     case UpdateType.CallbackQuery:
-                        await ReplyToCallbackQuery(botClient, update, cancellationToken);
+                        user = UserService.GetUsers(_userRepository).Data.FirstOrDefault(user => user.Id == update.CallbackQuery.Message.Chat.Id);
+
+                        await ReplyToCallbackQuery(botClient, update, cancellationToken, user);
                         return;
                     default:
                         break;
@@ -105,7 +106,7 @@ namespace YolaGuide
             return Task.CompletedTask;
         }
 
-        private static async Task ReplyToTextMessage(ITelegramBotClient botClient, Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+        private static async Task ReplyToTextMessage(ITelegramBotClient botClient, Telegram.Bot.Types.Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var chatId = message.Chat.Id;
             var messageText = message.Text;
@@ -123,7 +124,7 @@ namespace YolaGuide
 
                     return;
                 default:
-                    switch (_state)
+                    switch (user.State)
                     {
                         case State.Start:
                             await botClient.SendTextMessageAsync(
@@ -132,14 +133,14 @@ namespace YolaGuide
                                 cancellationToken: cancellationToken);
                             break;
                         case State.AddPlace:
-                            AddPlace(botClient, message, cancellationToken);
+                            AddPlace(botClient, message, cancellationToken, user);
                             break;
                     }
                     return;
             }
         }
 
-        private static async Task ReplyToCallbackQuery(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        private static async Task ReplyToCallbackQuery(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var callbackQuery = update.CallbackQuery;
             var chatId = callbackQuery.Message.Chat.Id;
@@ -189,8 +190,10 @@ namespace YolaGuide
                     break;
 
                 case "Место":
-                    _state = State.AddPlace;
-                    _stateAdd = StateAdd.GettingPlaceName;
+                    user.State = State.AddPlace;
+                    user.StateAdd = StateAdd.GettingPlaceName;
+                    await _userRepository.UpdateAsync(user);
+                    _newUserPlaces.Add(chatId, new());
 
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -201,16 +204,16 @@ namespace YolaGuide
             return;
         }
 
-        private static async void AddPlace(ITelegramBotClient botClient, Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
+        private static async void AddPlace(ITelegramBotClient botClient, Telegram.Bot.Types.Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var userInput = message.Text;
             var chatId = message.Chat.Id;
 
-            switch (_stateAdd)
+            switch (user.StateAdd)
             {
                 case StateAdd.GettingPlaceName:
-                    _newPlace.Name = userInput;
-                    _stateAdd = StateAdd.GettingPlaceDescription;
+                    _newUserPlaces[chatId].Name = userInput;
+                    user.StateAdd = StateAdd.GettingPlaceDescription;
 
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -219,15 +222,17 @@ namespace YolaGuide
                     break;
 
                 case StateAdd.GettingPlaceDescription:
-                    _newPlace.Description = userInput;
-                    _stateAdd = StateAdd.GettingPlaceImage;
+                    _newUserPlaces[chatId].Description = userInput;
+                    user.StateAdd = StateAdd.GettingPlaceImage;
 
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: $"{_newPlace.Name} {_newPlace.Description}",
+                        text: $"{_newUserPlaces[chatId].Name} {_newUserPlaces[chatId].Description}",
                         cancellationToken: cancellationToken);
                     break;
             };
+
+            await _userRepository.UpdateAsync(user);
         }
     }
 }
