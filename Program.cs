@@ -3,16 +3,27 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using YolaGuide.Settings;
+using YolaGuide.Response;
 using YolaGuide.Domain.Enums;
+using YolaGuide.Domain.Entity;
+using YolaGuide.DAL.Repositories.Implimentation;
+using YolaGuide.DAL;
+using YolaGuide.Service;
 
 namespace YolaGuide
 {
     public class Program
     {
         private static readonly string _token = "6749828476:AAFa3mJUnpiX_9yC2-SUReuxzoSVIqM6Rh4";
+        private static readonly List<long> _admins = new() { 1059169240 };
+        private static readonly UserRepository _userRepository = new(new ApplicationDbContext(new()));
+
         private static ITelegramBotClient? _botClient;
         private static Language _language = Language.Russian;
+        private static State _state = State.Start;
+        private static StateAdd _stateAdd = StateAdd.Start;
+
+        private static Place _newPlace = new();
 
         public static async Task Main()
         {
@@ -48,7 +59,11 @@ namespace YolaGuide
                 {
                     case UpdateType.Message:
                         var message = update.Message;
-                        var chatId = message.Chat.Id;
+                        var chatId = update.Message.Chat.Id;
+
+                        if (UserService.GetUsers(_userRepository).Data.FirstOrDefault(user => user.Id == chatId) == null)
+                            await UserService.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = update.Message.Chat.Username }, _userRepository);
+
                         switch (message.Type)
                         {
                             case MessageType.Text:
@@ -90,7 +105,7 @@ namespace YolaGuide
             return Task.CompletedTask;
         }
 
-        private static async Task ReplyToTextMessage(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+        private static async Task ReplyToTextMessage(ITelegramBotClient botClient, Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
         {
             var chatId = message.Chat.Id;
             var messageText = message.Text;
@@ -104,14 +119,22 @@ namespace YolaGuide
                        chatId: chatId,
                        text: "Выберете язык:\nSelect a language:",
                        cancellationToken: cancellationToken,
-                       replyMarkup: Keyboard.LanguageChangeKeyboard);
+                       replyMarkup: Keyboard.LanguageChange);
 
                     return;
                 default:
-                    await botClient.SendTextMessageAsync(
-                        chatId: chatId,
-                        text: "К сожалению, я ещё тупенький и не знаю этой команды",
-                        cancellationToken: cancellationToken);
+                    switch (_state)
+                    {
+                        case State.Start:
+                            await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: "К сожалению, я ещё тупенький и не знаю этой команды",
+                                cancellationToken: cancellationToken);
+                            break;
+                        case State.AddPlace:
+                            AddPlace(botClient, message, cancellationToken);
+                            break;
+                    }
                     return;
             }
         }
@@ -119,6 +142,7 @@ namespace YolaGuide
         private static async Task ReplyToCallbackQuery(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             var callbackQuery = update.CallbackQuery;
+            var chatId = callbackQuery.Message.Chat.Id;
             await botClient.AnswerCallbackQueryAsync(callbackQuery.Id, cancellationToken: cancellationToken);
 
             switch (callbackQuery.Data)
@@ -130,19 +154,80 @@ namespace YolaGuide
                     else
                         _language = Language.Russian;
 
-                    await SendWelcomeMessage(botClient, callbackQuery.Message.Chat.Id, _language, cancellationToken);
+                    if (_admins.Contains(chatId))
+                    {
+                        await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Response.Message.SelectAdmin[(int)_language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.SelectAdministrator(_language));
+
+                        return;
+                    }
+
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Response.Message.WelcomeMessage[(int)_language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.GetStart(_language));
                     return;
+
+                case "Главное меню":
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Response.Message.WelcomeMessage[(int)_language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.GetStart(_language));
+                    break;
+
+                case "Админ панель":
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Response.Message.WhatToAdd[(int)_language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.ChoosingWhatToAdd(_language));
+                    break;
+
+                case "Место":
+                    _state = State.AddPlace;
+                    _stateAdd = StateAdd.GettingPlaceName;
+
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Response.Message.EnteringPlaceName[(int)_language],
+                        cancellationToken: cancellationToken);
+                    break;
             }
             return;
         }
 
-        private static async Task SendWelcomeMessage(ITelegramBotClient botClient, long chatId, Language language, CancellationToken cancellationToken)
+        private static async void AddPlace(ITelegramBotClient botClient, Telegram.Bot.Types.Message message, CancellationToken cancellationToken)
         {
-            await botClient.SendTextMessageAsync(
+            var userInput = message.Text;
+            var chatId = message.Chat.Id;
+
+            switch (_stateAdd)
+            {
+                case StateAdd.GettingPlaceName:
+                    _newPlace.Name = userInput;
+                    _stateAdd = StateAdd.GettingPlaceDescription;
+
+                    await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Answer.WelcomeMessage[(int)language],
-                        cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetStartKeyboard(language));
+                        text: Response.Message.EnteringPlaceDescription[(int)_language],
+                        cancellationToken: cancellationToken);
+                    break;
+
+                case StateAdd.GettingPlaceDescription:
+                    _newPlace.Description = userInput;
+                    _stateAdd = StateAdd.GettingPlaceImage;
+
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: $"{_newPlace.Name} {_newPlace.Description}",
+                        cancellationToken: cancellationToken);
+                    break;
+            };
         }
     }
 }

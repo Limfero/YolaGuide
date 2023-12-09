@@ -10,8 +10,10 @@ namespace YolaGuide.DAL.Configurations
         {
             builder.ToTable("user");
 
-            builder.HasKey(user => user.Id)
-                .HasName("id_user");
+            builder.Property(user => user.Id)
+                .HasColumnName("id_user")
+                .ValueGeneratedNever()
+                .IsRequired();
 
             builder.Property(user => user.Username)
                 .HasColumnName("username")

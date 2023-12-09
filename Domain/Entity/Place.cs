@@ -17,5 +17,7 @@
         public List<Category> Categories { get; set; } = new();
 
         public List<User> Users { get; set; } = new();
+
+        public List<Route> Routes { get; set; } = new();
     }
 }

@@ -12,6 +12,7 @@ namespace YolaGuide.DAL
         public DbSet<User> Users { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Fact> Facts { get; set; }
+        public DbSet<Route> Routs { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
@@ -21,7 +22,7 @@ namespace YolaGuide.DAL
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(_connectionString);
-            optionsBuilder.LogTo(Console.WriteLine);
+            optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Warning);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -30,6 +31,7 @@ namespace YolaGuide.DAL
             modelBuilder.ApplyConfiguration(new FactConfiguration());
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
             modelBuilder.ApplyConfiguration(new PlaceConfiguration());
+            modelBuilder.ApplyConfiguration(new RouteConfiguration());
         }
     }
 }

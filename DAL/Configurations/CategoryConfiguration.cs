@@ -21,9 +21,10 @@ namespace YolaGuide.DAL.Configurations
             builder.Property(category => category.IdSubcategory)
                 .HasColumnName("id_subcategory");
 
-            builder.HasOne(category => category.Subcategories)
-                .WithOne(category => category.Subcategories)
-                .HasForeignKey<Category>(category => category.IdSubcategory);
+            builder.HasOne(category => category.Subcategory)
+                .WithMany(category => category.Subcategories)
+                .HasConstraintName("subcategory")
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }
