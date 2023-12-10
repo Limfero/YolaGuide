@@ -3,12 +3,12 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using YolaGuide.Response;
+using YolaGuide.Messages;
 using YolaGuide.Domain.Enums;
-using YolaGuide.Domain.Entity;
-using YolaGuide.DAL.Repositories.Implimentation;
-using YolaGuide.DAL;
 using YolaGuide.Service;
+using System.Reflection;
+using YolaGuide.Domain.ViewModel;
+using System.Threading;
 
 namespace YolaGuide
 {
@@ -16,16 +16,15 @@ namespace YolaGuide
     {
         private static readonly string _token = "6749828476:AAFa3mJUnpiX_9yC2-SUReuxzoSVIqM6Rh4";
         private static readonly List<long> _admins = new() { 1059169240 };
-        private static readonly UserRepository _userRepository = new(new ApplicationDbContext(new()));
+        private static readonly string _currentDirectory = Assembly.GetExecutingAssembly().Location;
+        private static readonly string _destinationFilePath = _currentDirectory[0.._currentDirectory.IndexOf("YolaGuide")] + "YolaGuide\\Image\\";
+        private static readonly Dictionary<long, PlaceViewModel> _newUserPlaces = new();
 
-        private static ITelegramBotClient? _botClient;
         private static Language _language = Language.Russian;
-
-        private static Dictionary<long, Place> _newUserPlaces = new();
 
         public static async Task Main()
         {
-            _botClient = new TelegramBotClient(_token);
+            var _botClient = new TelegramBotClient(_token);
 
             using CancellationTokenSource cancellationTokenSource = new();
 
@@ -58,16 +57,32 @@ namespace YolaGuide
                     case UpdateType.Message:
                         var message = update.Message;
                         var chatId = update.Message.Chat.Id;
-                        var user = UserService.GetUsers(_userRepository).Data.FirstOrDefault(user => user.Id == chatId);
+                        var user = UserService.GetUserById(chatId).Data;
 
                         if (user == null)
-                            await UserService.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = update.Message.Chat.Username }, _userRepository);
+                            await UserService.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = update.Message.Chat.Username });
 
                         switch (message.Type)
                         {
                             case MessageType.Text:
-                                await ReplyToTextMessage(botClient, message, cancellationToken, user);
-                                return;
+                                await ReplyToTextMessageAsync(botClient, message, cancellationToken, user);
+                                break;
+                            case MessageType.Photo:
+                                switch (user.State)
+                                {
+                                    case State.Start:
+                                        await botClient.SendTextMessageAsync(
+                                           chatId: chatId,
+                                           text: "Красивое... Но, к сожалению, я понимаю только текст :с",
+                                           cancellationToken: cancellationToken);
+                                        break;
+
+                                    case State.AddPlace:
+                                        await AddPlaceAsync(botClient, message, cancellationToken, user);
+                                        break;
+                                }
+                                break;
+
                             default:
                                 await botClient.SendTextMessageAsync(
                                    chatId: chatId,
@@ -75,13 +90,13 @@ namespace YolaGuide
                                    cancellationToken: cancellationToken);
                                 break;
                         }
-                        return;
+                        break;
 
                     case UpdateType.CallbackQuery:
-                        user = UserService.GetUsers(_userRepository).Data.FirstOrDefault(user => user.Id == update.CallbackQuery.Message.Chat.Id);
+                        user = UserService.GetUsers().Data.FirstOrDefault(user => user.Id == update.CallbackQuery.Message.Chat.Id);
 
-                        await ReplyToCallbackQuery(botClient, update, cancellationToken, user);
-                        return;
+                        await ReplyToCallbackQueryAsync(botClient, update, cancellationToken, user);
+                        break;
                     default:
                         break;
                     
@@ -106,7 +121,7 @@ namespace YolaGuide
             return Task.CompletedTask;
         }
 
-        private static async Task ReplyToTextMessage(ITelegramBotClient botClient, Telegram.Bot.Types.Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        private static async Task ReplyToTextMessageAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var chatId = message.Chat.Id;
             var messageText = message.Text;
@@ -121,8 +136,8 @@ namespace YolaGuide
                        text: "Выберете язык:\nSelect a language:",
                        cancellationToken: cancellationToken,
                        replyMarkup: Keyboard.LanguageChange);
+                    break;
 
-                    return;
                 default:
                     switch (user.State)
                     {
@@ -132,15 +147,16 @@ namespace YolaGuide
                                 text: "К сожалению, я ещё тупенький и не знаю этой команды",
                                 cancellationToken: cancellationToken);
                             break;
+
                         case State.AddPlace:
-                            AddPlace(botClient, message, cancellationToken, user);
+                            await AddPlaceAsync(botClient, message, cancellationToken, user);
                             break;
                     }
-                    return;
+                    break;
             }
         }
 
-        private static async Task ReplyToCallbackQuery(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, Domain.Entity.User user)
+        private static async Task ReplyToCallbackQueryAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var callbackQuery = update.CallbackQuery;
             var chatId = callbackQuery.Message.Chat.Id;
@@ -159,24 +175,24 @@ namespace YolaGuide
                     {
                         await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Response.Message.SelectAdmin[(int)_language],
+                        text: Answer.SelectAdmin[(int)_language],
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.SelectAdministrator(_language));
 
-                        return;
+                        break;
                     }
 
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Response.Message.WelcomeMessage[(int)_language],
+                        text: Answer.WelcomeMessage[(int)_language],
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.GetStart(_language));
-                    return;
+                    break;
 
                 case "Главное меню":
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Response.Message.WelcomeMessage[(int)_language],
+                        text: Answer.WelcomeMessage[(int)_language],
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.GetStart(_language));
                     break;
@@ -184,7 +200,7 @@ namespace YolaGuide
                 case "Админ панель":
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Response.Message.WhatToAdd[(int)_language],
+                        text: Answer.WhatToAdd[(int)_language],
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.ChoosingWhatToAdd(_language));
                     break;
@@ -192,47 +208,168 @@ namespace YolaGuide
                 case "Место":
                     user.State = State.AddPlace;
                     user.StateAdd = StateAdd.GettingPlaceName;
-                    await _userRepository.UpdateAsync(user);
-                    _newUserPlaces.Add(chatId, new());
+                    await UserService.Update(user);
+
+                    if (_newUserPlaces.ContainsKey(chatId))
+                        _newUserPlaces[chatId] = new();
+                    else
+                        _newUserPlaces.Add(chatId, new());
 
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Response.Message.EnteringPlaceName[(int)_language],
+                        text: Answer.EnteringPlaceName[(int)_language],
                         cancellationToken: cancellationToken);
                     break;
+
+                case "Я все выбрал!":
+                    user.StateAdd = StateAdd.End;
+                    await UserService.Update(user);
+                    goto default;
+
+                default:
+                    if(user.StateAdd != StateAdd.End)
+                        await botClient.AnswerCallbackQueryAsync(callbackQuery.Id, "Добавлено!");
+
+                    switch (user.State)
+                    {
+                        case State.AddPlace:
+                            await AddPlaceAsync(botClient, new Message() { Text = callbackQuery.Data, Chat = callbackQuery.Message.Chat }, cancellationToken, user);
+                            break;
+                    }
+                    break;
             }
-            return;
         }
 
-        private static async void AddPlace(ITelegramBotClient botClient, Telegram.Bot.Types.Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        private static async Task AddPlaceAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var userInput = message.Text;
             var chatId = message.Chat.Id;
 
+
             switch (user.StateAdd)
             {
                 case StateAdd.GettingPlaceName:
+                    if (await IsNotCorrectInput(userInput.Split(" ").Length == 2,userInput, botClient, chatId, cancellationToken))
+                        break;
+
                     _newUserPlaces[chatId].Name = userInput;
                     user.StateAdd = StateAdd.GettingPlaceDescription;
 
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Response.Message.EnteringPlaceDescription[(int)_language],
+                        text: Answer.EnteringPlaceDescription[(int)_language],
                         cancellationToken: cancellationToken);
                     break;
 
                 case StateAdd.GettingPlaceDescription:
+                    if (await IsNotCorrectInput(userInput.Split("\n\n").Length == 2, userInput, botClient, chatId, cancellationToken))
+                        break;
+
                     _newUserPlaces[chatId].Description = userInput;
                     user.StateAdd = StateAdd.GettingPlaceImage;
 
                     await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: $"{_newUserPlaces[chatId].Name} {_newUserPlaces[chatId].Description}",
+                        text: Answer.EnteringPlaceImage[(int)_language],
                         cancellationToken: cancellationToken);
+                    break;
+
+                case StateAdd.GettingPlaceImage:
+                    var fileId = message.Photo.Last().FileId;
+                    var destinationImagePath = _destinationFilePath + $"{_newUserPlaces[chatId].Name}Place.png";
+
+                    await using (Stream fileStream = System.IO.File.Create(new string(destinationImagePath)))
+                    {
+                        var file = await botClient.GetInfoAndDownloadFileAsync(
+                            fileId: fileId,
+                            destination: fileStream,
+                            cancellationToken: cancellationToken);
+                    }
+
+                    _newUserPlaces[chatId].Image = $"{_newUserPlaces[chatId].Name}Place.png";
+                    user.StateAdd = StateAdd.GettingPlaceYId;
+
+                    // Отправление фотографий
+                    //using (var fileStream = new FileStream("Я путь", FileMode.Open, FileAccess.Read, FileShare.Read))
+                    //{
+                    //    await botClient.SendPhotoAsync(
+                    //        chatId: chatId,
+                    //        photo: InputFile.FromStream(fileStream),
+                    //        caption: $"Я текст",
+                    //        cancellationToken: cancellationToken);
+                    //}
+
+                    await botClient.SendTextMessageAsync(
+                       chatId: chatId,
+                       text: Answer.EnteringPlaceYId[(int)_language],
+                       cancellationToken: cancellationToken);
+                    break;
+
+                case StateAdd.GettingPlaceYId:
+                    if (await IsNotCorrectInput(userInput.Length == 12, userInput, botClient, chatId, cancellationToken))
+                        break;
+
+                    _newUserPlaces[chatId].YIdOrganization = long.Parse(userInput);
+                    user.StateAdd = StateAdd.GettingPlaceCoordinates;
+
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.EnteringPlaceCoordinates[(int)_language],
+                        cancellationToken: cancellationToken);
+                    break;
+
+                case StateAdd.GettingPlaceCoordinates:
+                    var listInput = userInput.Split(",");
+                    if (await IsNotCorrectInput(listInput.Length == 2, userInput, botClient, chatId, cancellationToken))
+                        break;
+
+                    _newUserPlaces[chatId].Coordinates = listInput[0].Trim() + "," + listInput[1].Trim();
+                    user.StateAdd = StateAdd.GettingPlaceCategories;
+
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.EnteringPlaceCategories[(int)_language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.CategorySelection(_language, _newUserPlaces[chatId].Categories.Count != 0 ? _newUserPlaces[chatId].Categories.Last() : null));
+                    break;
+
+                case StateAdd.GettingPlaceCategories:
+                    if (CategoryService.GetCategoryByName(userInput).Data == null)
+                        break;
+
+                    _newUserPlaces[chatId].Categories.Add(CategoryService.GetCategoryByName(userInput).Data);
+
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.Continue[(int)_language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.CategorySelection(_language, _newUserPlaces[chatId].Categories.Last()));
+                    break;
+
+                case StateAdd.End:
+                    await PlaceService.AddPlace(_newUserPlaces[chatId]);
+
+                    await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.PlaceSuccessfullyAdded[(int)_language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.SelectAdministrator(_language));
                     break;
             };
 
-            await _userRepository.UpdateAsync(user);
+            await UserService.Update(user);
+        }
+
+        private static async Task<bool> IsNotCorrectInput(bool condition, string userInput, ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken)
+        {
+            if (condition) return false;
+
+             await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.ErrorInput[(int)_language],
+                        cancellationToken: cancellationToken);
+
+             return true;
         }
     }
 }

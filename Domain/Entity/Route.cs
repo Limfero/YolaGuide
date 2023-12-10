@@ -12,6 +12,8 @@
 
         public string Telephone { get; set; }
 
+        public string Image { get; set; }
+
         public List<Place> Places { get; set; } = new();
 
         public List<User> Users { get; set; } = new();

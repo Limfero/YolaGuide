@@ -1,7 +1,11 @@
-﻿using Telegram.Bot.Types.ReplyMarkups;
+﻿using System.Linq;
+using Telegram.Bot.Types.ReplyMarkups;
+using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
+using YolaGuide.Service;
+using static Azure.Core.HttpHeader;
 
-namespace YolaGuide.Response
+namespace YolaGuide.Messages
 {
     public static class Keyboard
     {
@@ -60,6 +64,30 @@ namespace YolaGuide.Response
                 }
             });
         }
+
+        public static InlineKeyboardMarkup CategorySelection(Language language, Category category)
+        {
+            var categories = CategoryService.GetCategores(category).Data.ToList();
+            var keyboard = new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>());
+
+            foreach (var c in categories)
+            {
+                var listNamesInDiffLanguages = c.Name.Split(" ");
+
+                keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton> 
+                {
+                    InlineKeyboardButton.WithCallbackData(new List<string>() { listNamesInDiffLanguages[(int)Language.Russian], listNamesInDiffLanguages[(int)Language.English] }[(int)language], c.Name) 
+                }));
+            }
+
+            keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал!", "I chose everything!" }[(int)language], "Я все выбрал!"),
+            }));
+
+            return keyboard;
+        }
+
     }
 }
 

@@ -9,5 +9,10 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         public UserRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
         }
+
+        public User GetUserById(long id)
+        {
+            return _dbContext.Set<User>().FirstOrDefault(user => user.Id == id);
+        }
     }
 }

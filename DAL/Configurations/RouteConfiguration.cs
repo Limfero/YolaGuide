@@ -32,6 +32,9 @@ namespace YolaGuide.DAL.Configurations
                 .HasMaxLength(14)
                 .IsRequired();
 
+            builder.Property(route => route.Image)
+                .HasColumnName("route_to_image");
+
             builder.HasMany(route => route.Users)
                 .WithMany(user => user.Routes)
                 .UsingEntity(j => j.ToTable("user_has_route"));

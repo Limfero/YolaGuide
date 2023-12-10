@@ -23,7 +23,7 @@ namespace YolaGuide.DAL.Configurations
                 .IsRequired();
 
             builder.Property(place => place.Image)
-                 .HasColumnName("image");
+                 .HasColumnName("route_to_image");
 
             builder.Property(place => place.YIdOrganization)
                  .HasColumnName("yid_org")
