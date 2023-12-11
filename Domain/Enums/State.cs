@@ -4,7 +4,7 @@
     {
         Start = 0,
 
-        //Добавление места
         AddPlace = 10,
+        AddCategory = 11,
     }
 }

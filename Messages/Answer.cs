@@ -8,6 +8,18 @@
             "Hi, I'm Yola Guide! I will tell you about all the places in Yoshkar-Ola."
         };
 
+        public static List<string> WrongCommand { get; set; } = new()
+        {
+            "К сожалению, я ещё тупенький и не знаю этой команды",
+            "Unfortunately, I'm still dumb and don't know this command yet"
+        };
+
+        public static List<string> WrongInputFormat { get; set; } = new()
+        {
+            "Красивое... Но, к сожалению, я понимаю только текст :с",
+            "It's beautiful... But unfortunately, I can only understand the text :s"
+        };
+
         public static List<string> SelectAdmin { get; set; } = new()
         {
             "Куда идем, магистр?",
@@ -20,29 +32,35 @@
             "What do we add, sir?"
         };
 
-        public static List<string> Continue { get; set; } = new()
-        {
-            "~продолжаем~",
-            "~continue~"
-        };
-
         public static List<string> ErrorInput { get; set; } = new()
         {
             "Ой... Ошибочка в формате написания. Пробуй ещё раз, пожалуйста!",
             "Oops... Wrong spelling format. Try again, please!"
         };
 
+        public static List<string> SuccessfullyAdded { get; set; } = new()
+        {
+            "Поздравляю! Ты смог добавить\nヽ(°□° )ノ\nКуда направимся теперь?",
+            "Congratulations!!! You were able to add\nヽ(°□° )ノ\nWhere do we go now?"
+        };
+        
         // Добавление места
         public static List<string> EnteringPlaceName { get; set; } = new()
         {
-            "Введи имя нового места(сначала русский потом через пробел английский):",
+            "Введи имя нового места(сначала на русском, потом через строчку на английском):",
             "Enter the name of the new place(first Russian then English with a space):"
         };
 
         public static List<string> EnteringPlaceDescription { get; set; } = new()
         {
-            "Введи описание нового места(сначала на русском, потом через строчку на английском):",
-            "Enter the description of the new place(first in Russian, then a line later in English):"
+            "Введи описание места(сначала на русском, потом через строчку на английском):",
+            "Enter the description of the place(first in Russian, then a line later in English):"
+        };
+
+        public static List<string> EnteringPlaceAdress { get; set; } = new()
+        {
+            "Введи адрес этого места:",
+            "Enter the address of this place:"
         };
 
         public static List<string> EnteringPlaceImage { get; set; } = new()
@@ -69,10 +87,17 @@
             "All that's left is to choose the filters:"
         };
 
-        public static List<string> PlaceSuccessfullyAdded { get; set; } = new()
+        // Добавление категории
+        public static List<string> EnteringCategoryName { get; set; } = new()
         {
-            "Поздравляю! Ты смог добавить целое место ヽ(°□° )ノ\n\nКуда направимся теперь?",
-            "Congratulations!!! You were able to add a whole ヽ(°□° )ノ\n\nWhere do we go now?"
+            "Введи название новой категории(сначала на русском, потом через строчку на английском):",
+            "Enter the name of the new category(first Russian then English with a space):"
+        };
+
+        public static List<string> EnteringCategorySubcategory { get; set; } = new()
+        {
+            "Осталось понять, будет ли эта категория подкатегорией? Если да, то выбери какой!",
+            "It remains to be seen if this category will be a subcategory? If so, pick which one!"
         };
     }
 }

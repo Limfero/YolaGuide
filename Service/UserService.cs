@@ -1,5 +1,4 @@
-﻿using YolaGuide.DAL;
-using YolaGuide.DAL.Repositories.Implimentation;
+﻿using YolaGuide.DAL.Repositories.Implimentation;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
@@ -7,11 +6,16 @@ using YolaGuide.Domain.ViewModel;
 
 namespace YolaGuide.Service
 {
-    public static class UserService
+    public class UserService
     {
-        private static readonly UserRepository _userRepository = new(new ApplicationDbContext(new()));
+        private readonly UserRepository _userRepository;
 
-        public static async Task<IBaseResponse<User>> CreateUser(UserViewModel model)
+        public UserService(UserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
+
+        public async Task<IBaseResponse<User>> CreateUserAsync(UserViewModel model)
         {
             try 
             {
@@ -43,7 +47,7 @@ namespace YolaGuide.Service
             }
         }
 
-        public static IBaseResponse<List<User>> GetUsers()
+        public IBaseResponse<List<User>> GetUsers()
         {
             try
             {
@@ -66,7 +70,7 @@ namespace YolaGuide.Service
             }
         }
 
-        public static IBaseResponse<User> GetUserById(long id)
+        public IBaseResponse<User> GetUserById(long id)
         {
             try
             {
@@ -89,7 +93,7 @@ namespace YolaGuide.Service
             }
         }
 
-        public static async Task<IBaseResponse<User>> Update(User user)
+        public async Task<IBaseResponse<User>> Update(User user)
         {
             try
             {

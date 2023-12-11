@@ -20,6 +20,7 @@ namespace YolaGuide.DAL.Configurations
 
             builder.Property(fact => fact.Description)
                 .HasColumnName("description")
+                .HasColumnType("text")
                 .HasMaxLength(50)
                 .IsRequired();
         }

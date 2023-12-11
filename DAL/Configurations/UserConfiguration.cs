@@ -23,6 +23,10 @@ namespace YolaGuide.DAL.Configurations
             builder.HasMany(user => user.Places)
                 .WithMany(place => place.Users)
                 .UsingEntity(j => j.ToTable("user_has_place"));
+
+            builder.HasMany(user => user.Categories)
+                .WithMany(place => place.Users)
+                .UsingEntity(j => j.ToTable("user_has_category"));
         }
     }
 }

@@ -8,6 +8,8 @@
 
         public string Description { get; set; }
 
+        public string Adress { get; set; }
+
         public string Image { get; set; }
 
         public long YIdOrganization { get; set; }

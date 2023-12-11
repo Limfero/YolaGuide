@@ -15,5 +15,7 @@ namespace YolaGuide.Domain.Entity
         public List<Place> Places { get; set; } = new();
 
         public List<Route> Routes { get; set; } = new();
+
+        public List<Category> Categories { get; set; } = new();
     }
 }

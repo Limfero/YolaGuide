@@ -20,6 +20,7 @@ namespace YolaGuide.DAL.Configurations
 
             builder.Property(route => route.Description)
                 .HasColumnName("description")
+                .HasColumnType("text")
                 .IsRequired();
 
             builder.Property(route => route.Cost)

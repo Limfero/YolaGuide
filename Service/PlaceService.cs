@@ -1,17 +1,21 @@
-﻿using YolaGuide.DAL.Repositories.Implimentation;
-using YolaGuide.DAL;
-using YolaGuide.Domain.Entity;
+﻿using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
 using YolaGuide.Domain.ViewModel;
+using YolaGuide.DAL.Repositories.Implimentation;
 
 namespace YolaGuide.Service
 {
-    public static class PlaceService
+    public class PlaceService
     {
-        private static readonly PlaceRepository _placeRepository = new(new ApplicationDbContext(new()));
+        private readonly PlaceRepository _placeRepository;
 
-        public static async Task<IBaseResponse<Place>> AddPlace(PlaceViewModel model)
+        public PlaceService(PlaceRepository placeRepository)
+        {
+            _placeRepository = placeRepository;
+        }
+
+        public async Task<IBaseResponse<Place>> CreatePlace(PlaceViewModel model)
         {
             try
             {
@@ -20,13 +24,13 @@ namespace YolaGuide.Service
                     Name = model.Name,
                     Description = model.Description,
                     Image = model.Image,
+                    Adress = model.Adress,
                     YIdOrganization = model.YIdOrganization,
                     Coordinates = model.Coordinates,
                     Categories = model.Categories
                 };
 
                 var response = await _placeRepository.CreateAsync(place);
-
 
                 return new BaseResponse<Place>()
                 {

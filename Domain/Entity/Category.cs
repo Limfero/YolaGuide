@@ -6,11 +6,12 @@
 
         public string Name { get; set; }
 
-        public int IdSubcategory { get; set; }
-        public Category Subcategory { get; set; }
+        public Category? Subcategory { get; set; }
 
-        public List<Category> Subcategories { get; set; }
+        public List<Category> Subcategories { get; set; } = new();
 
         public List<Place> Places { get; set; } = new();
+
+        public List<User> Users { get; set; } = new();  
     }
 }

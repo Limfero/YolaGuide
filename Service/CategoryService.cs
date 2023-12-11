@@ -1,16 +1,21 @@
 ﻿using YolaGuide.DAL.Repositories.Implimentation;
-using YolaGuide.DAL;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
 using YolaGuide.Domain.Entity;
+using YolaGuide.Domain.ViewModel;
 
 namespace YolaGuide.Service
 {
-    public static class CategoryService
+    public class CategoryService
     {
-        private static readonly CategoryRepository _categoryRepository = new(new ApplicationDbContext(new()));
+        private readonly CategoryRepository _categoryRepository;
 
-        public static IBaseResponse<List<Category>> GetCategores(Category category)
+        public CategoryService(CategoryRepository categoryRepository)
+        {
+            _categoryRepository = categoryRepository;
+        }
+
+        public IBaseResponse<List<Category>> GetCategores(Category category)
         {
             try
             {
@@ -38,7 +43,7 @@ namespace YolaGuide.Service
             }
         }
 
-        public static IBaseResponse<Category> GetCategoryByName(string name)
+        public IBaseResponse<Category> GetCategoryByName(string name)
         {
             try
             {
@@ -59,6 +64,34 @@ namespace YolaGuide.Service
                     StatusCode = StatusCode.InternalServerError
                 };
             }
+        }
+
+        public async Task<IBaseResponse<Category>> CreateCategory(CategoryViewModel model)
+        {
+            try
+            {
+                var category = new Category()
+                {
+                    Name = model.Name,
+                    Subcategory = model.Subcategory
+                };
+
+                var response = await _categoryRepository.CreateAsync(category);
+
+                return new BaseResponse<Category>()
+                {
+                    Data = response,
+                    StatusCode = StatusCode.OK
+                };
+            }
+            catch(Exception ex) 
+            {
+                return new BaseResponse<Category>()
+                {
+                    Description = $"[CategoryService.CreateCategory] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }   
         }
     }
 }
