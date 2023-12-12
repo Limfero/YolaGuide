@@ -1,16 +1,16 @@
-﻿using YolaGuide.DAL.Repositories.Implimentation;
-using YolaGuide.Domain.Enums;
+﻿using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.ViewModel;
+using YolaGuide.DAL.Repositories.Interfaces;
 
 namespace YolaGuide.Service
 {
     public class CategoryService
     {
-        private readonly CategoryRepository _categoryRepository;
+        private readonly ICategoryRepository _categoryRepository;
 
-        public CategoryService(CategoryRepository categoryRepository)
+        public CategoryService(ICategoryRepository categoryRepository)
         {
             _categoryRepository = categoryRepository;
         }

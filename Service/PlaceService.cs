@@ -2,15 +2,15 @@
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
 using YolaGuide.Domain.ViewModel;
-using YolaGuide.DAL.Repositories.Implimentation;
+using YolaGuide.DAL.Repositories.Interfaces;
 
 namespace YolaGuide.Service
 {
     public class PlaceService
     {
-        private readonly PlaceRepository _placeRepository;
+        private readonly IPlaceRepository _placeRepository;
 
-        public PlaceService(PlaceRepository placeRepository)
+        public PlaceService(IPlaceRepository placeRepository)
         {
             _placeRepository = placeRepository;
         }
@@ -24,7 +24,7 @@ namespace YolaGuide.Service
                     Name = model.Name,
                     Description = model.Description,
                     Image = model.Image,
-                    Adress = model.Adress,
+                    ContactInformation = model.ContactInformation,
                     YIdOrganization = model.YIdOrganization,
                     Coordinates = model.Coordinates,
                     Categories = model.Categories

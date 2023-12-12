@@ -20,6 +20,18 @@ namespace YolaGuide.DAL.Configurations
                 .HasMaxLength(50)
                 .IsRequired();
 
+            builder.Property(user => user.State)
+                .HasColumnName("state")
+                .IsRequired();
+
+            builder.Property(user => user.StateAdd)
+                .HasColumnName("state_add")
+                .IsRequired();
+
+            builder.Property(user => user.Language)
+                .HasColumnName("language")
+                .IsRequired();
+
             builder.HasMany(user => user.Places)
                 .WithMany(place => place.Users)
                 .UsingEntity(j => j.ToTable("user_has_place"));

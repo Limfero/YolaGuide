@@ -1,4 +1,5 @@
 ﻿using YolaGuide.DAL;
+using YolaGuide.DAL.Repositories.Implimentation;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.ViewModel;
 using YolaGuide.Service;
@@ -7,7 +8,7 @@ namespace YolaGuide.Controllers
 {
     public static class UserController
     {
-        private static readonly UserService _userService = new(new(new ApplicationDbContext(new())));
+        private static readonly UserService _userService = new(new UserRepository(new ApplicationDbContext(new())));
 
         public static async Task CreateUser(UserViewModel model)
         {

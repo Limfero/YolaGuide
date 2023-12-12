@@ -1,4 +1,4 @@
-﻿using YolaGuide.DAL.Repositories.Implimentation;
+﻿using YolaGuide.DAL.Repositories.Interfaces;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
@@ -8,9 +8,9 @@ namespace YolaGuide.Service
 {
     public class UserService
     {
-        private readonly UserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
 
-        public UserService(UserRepository userRepository)
+        public UserService(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }

@@ -1,9 +1,10 @@
 ﻿using YolaGuide.DAL.Repositories.Implementation;
+using YolaGuide.DAL.Repositories.Interfaces;
 using YolaGuide.Domain.Entity;
 
 namespace YolaGuide.DAL.Repositories.Implimentation
 {
-    public class CategoryRepository : BaseRepository<Category>
+    public class CategoryRepository : BaseRepository<Category>, ICategoryRepository
     {
         public CategoryRepository(ApplicationDbContext dbContext) : base(dbContext)
         {

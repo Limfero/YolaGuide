@@ -12,6 +12,8 @@ namespace YolaGuide.Domain.Entity
 
         public StateAdd StateAdd { get; set; }
 
+        public Language Language { get; set; }
+
         public List<Place> Places { get; set; } = new();
 
         public List<Route> Routes { get; set; } = new();

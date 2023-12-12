@@ -6,12 +6,13 @@ using YolaGuide.Domain.ViewModel;
 using YolaGuide.Service;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Messages;
+using YolaGuide.DAL.Repositories.Implimentation;
 
 namespace YolaGuide.Controllers
 {
     public static class CategoryController
     {
-        private static readonly CategoryService _categoryService = new(new(new ApplicationDbContext(new())));
+        private static readonly CategoryService _categoryService = new(new CategoryRepository(new ApplicationDbContext(new())));
         private static readonly Dictionary<long, CategoryViewModel> _newUserCategory = new();
 
         public static void AddNewPairInDictionary(long chatId)
@@ -58,26 +59,26 @@ namespace YolaGuide.Controllers
             switch (user.StateAdd)
             {
                 case StateAdd.GettingCategoryName:
-                    if (await IsNotCorrectInput(userInput.Split("\n\n").Length == (int)Language.English + 1, userInput, botClient, chatId, cancellationToken))
+                    if (await IsNotCorrectInput(userInput, botClient, chatId, cancellationToken, user))
                         break;
 
                     _newUserCategory[chatId].Name = userInput;
                     user.StateAdd = StateAdd.GettingCategorySubcategory;
 
-                    await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Answer.EnteringCategorySubcategory[(int)Settings.Language],
+                        text: Answer.EnteringCategorySubcategory[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.CategorySelection(null));
+                        replyMarkup: Keyboard.CategorySelection(null, user));
                     break;
 
                 case StateAdd.GettingCategorySubcategory:
-                    await botClient.EditMessageTextAsync(
-                        messageId: message.MessageId,
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
-                        text: Answer.EnteringCategorySubcategory[(int)Settings.Language],
+                        text: Answer.EnteringCategorySubcategory[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.CategorySelection(GetCategoryByName(message.Text)));
+                        replyMarkup: Keyboard.CategorySelection(GetCategoryByName(message.Text), user));
                     break;
 
                 case StateAdd.End:
@@ -88,22 +89,24 @@ namespace YolaGuide.Controllers
                     user.State = State.Start;
                     user.StateAdd = StateAdd.Start;
 
-                    await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Answer.SuccessfullyAdded[(int)Settings.Language],
+                        text: Answer.SuccessfullyAdded[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.SelectAdministrator());
+                        replyMarkup: Keyboard.GetStart(chatId, user));
                     break;
             }
+
+            await UserController.UpdateUser(user);
         }
 
-        private static async Task<bool> IsNotCorrectInput(bool condition, string userInput, ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken)
+        private static async Task<bool> IsNotCorrectInput(string userInput, ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken, Domain.Entity.User user)
         {
-            if (condition) return false;
+            if (userInput.Split("\n\n").Length == (int)Language.English + 1) return false;
 
-            await botClient.SendTextMessageAsync(
+            Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
             chatId: chatId,
-                       text: Answer.ErrorInput[(int)Settings.Language],
+                       text: Answer.WrongInputFormat[(int)user.Language],
                        cancellationToken: cancellationToken);
 
             return true;

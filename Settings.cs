@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Telegram.Bot.Types;
 using YolaGuide.Domain.Enums;
 
 namespace YolaGuide
@@ -15,6 +16,6 @@ namespace YolaGuide
 
         public static List<long> Admins { get { return new() { 1059169240 }; } }
 
-        public static Language Language { get; set; }
+        public static Dictionary<long, Message> LastBotMsg = new();
     }
 }

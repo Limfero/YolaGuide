@@ -8,16 +8,10 @@
             "Hi, I'm Yola Guide! I will tell you about all the places in Yoshkar-Ola."
         };
 
-        public static List<string> WrongCommand { get; set; } = new()
+        public static List<string> Settings { get; set; } = new()
         {
-            "К сожалению, я ещё тупенький и не знаю этой команды",
-            "Unfortunately, I'm still dumb and don't know this command yet"
-        };
-
-        public static List<string> WrongInputFormat { get; set; } = new()
-        {
-            "Красивое... Но, к сожалению, я понимаю только текст :с",
-            "It's beautiful... But unfortunately, I can only understand the text :s"
+            "Что желаете настроить?",
+            "What do you wish to customize?"
         };
 
         public static List<string> SelectAdmin { get; set; } = new()
@@ -32,16 +26,35 @@
             "What do we add, sir?"
         };
 
-        public static List<string> ErrorInput { get; set; } = new()
-        {
-            "Ой... Ошибочка в формате написания. Пробуй ещё раз, пожалуйста!",
-            "Oops... Wrong spelling format. Try again, please!"
-        };
-
         public static List<string> SuccessfullyAdded { get; set; } = new()
         {
             "Поздравляю! Ты смог добавить\nヽ(°□° )ノ\nКуда направимся теперь?",
             "Congratulations!!! You were able to add\nヽ(°□° )ノ\nWhere do we go now?"
+        };
+
+        // Ошибочки
+        public static List<string> WrongCommand { get; set; } = new()
+        {
+            "К сожалению, я ещё тупенький и не знаю этой команды",
+            "Unfortunately, I'm still dumb and don't know this command yet"
+        };
+
+        public static List<string> WrongInputType { get; set; } = new()
+        {
+            "Красивое... Но, к сожалению, я понимаю только текст :с",
+            "It's beautiful... But unfortunately, I can only understand the text :с"
+        };
+
+        public static List<string> WrongLanguage { get; set; } = new()
+        {
+            "Я не знаю такого языка... :с",
+            "I don't know that kind of language... :с"
+        };
+
+        public static List<string> WrongInputFormat { get; set; } = new()
+        {
+            "Ой... Ошибочка в формате написания. Пробуй ещё раз, пожалуйста!",
+            "Oops... Wrong spelling format. Try again, please!"
         };
         
         // Добавление места
@@ -59,8 +72,8 @@
 
         public static List<string> EnteringPlaceAdress { get; set; } = new()
         {
-            "Введи адрес этого места:",
-            "Enter the address of this place:"
+            "Введи контактнцю информацию для этого места(сначала на русском, потом через строчку на английском):",
+            "Enter the address of this place(first in Russian, then a line later in English):"
         };
 
         public static List<string> EnteringPlaceImage { get; set; } = new()
@@ -98,6 +111,19 @@
         {
             "Осталось понять, будет ли эта категория подкатегорией? Если да, то выбери какой!",
             "It remains to be seen if this category will be a subcategory? If so, pick which one!"
+        };
+
+        //Добавление фатка
+        public static List<string> EnteringFactName { get; set; } = new()
+        {
+            "Придумай название фактика(сначала на русском, потом через строчку на английском):",
+            "Think up a name for the factoid(first in Russian, then across the line in English):"
+        };
+
+        public static List<string> EnteringFactDescription { get; set; } = new()
+        {
+            "Ну и давай свой факт(сначала на русском, потом через строчку на английском):",
+            "So give me your fact(first in Russian, then across the line in English):"
         };
     }
 }
