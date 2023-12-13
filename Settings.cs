@@ -14,6 +14,8 @@ namespace YolaGuide
 
         public static string DestinationImagePath { get { return CurrentDirectory[0..CurrentDirectory.IndexOf("YolaGuide")] + "YolaGuide\\Image\\"; } }
 
+        public static string URLYandexOrganization { get { return "https://yandex.ru/maps/org/{0}"; } }
+
         public static List<long> Admins { get { return new() { 1059169240 }; } }
 
         public static Dictionary<long, Message> LastBotMsg = new();

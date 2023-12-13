@@ -7,5 +7,6 @@
         AddPlace = 10,
         AddCategory = 11,
         AddFact = 11,
+        ClarificationOfPreferences = 12,
     }
 }

@@ -9,5 +9,7 @@ namespace YolaGuide.DAL.Repositories.Interfaces
         List<Category> GetSubcategories(Category mainCategory);
 
         Category GetCategoryByName(string name);
+
+        List<Category> GetAllSubcategories();
     }
 }

@@ -30,11 +30,10 @@ namespace YolaGuide.Service
                     Categories = model.Categories
                 };
 
-                var response = await _placeRepository.CreateAsync(place);
+                await _placeRepository.CreateAsync(place);
 
                 return new BaseResponse<Place>()
                 {
-                    Data = response,
                     Description = "Место успешно создано",
                     StatusCode = StatusCode.OK
                 };
@@ -44,7 +43,55 @@ namespace YolaGuide.Service
             {
                 return new BaseResponse<Place>()
                 {
-                    Description = $"[PlaceService.AddPlace] - {ex.Message}",
+                    Description = $"[PlaceService.CreatePlace] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public IBaseResponse<List<Place>> GetPlaceByCategory(Category category)
+        {
+            try
+            {
+                var places = _placeRepository.GetPlaceByCategory(category);
+
+                return new BaseResponse<List<Place>>()
+                {
+                    Data = places,
+                    Description = "Места найдены!",
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<List<Place>>()
+                {
+                    Description = $"[PlaceService.GetPlaceByCategory] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public IBaseResponse<List<Place>> GetAllPlace()
+        {
+            try
+            {
+                var places = _placeRepository.GetAll().ToList();
+
+                return new BaseResponse<List<Place>>()
+                {
+                    Data = places,
+                    Description = "Места найдены!",
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<List<Place>>()
+                {
+                    Description = $"[PlaceService.GetPlaceByCategory] - {ex.Message}",
                     StatusCode = StatusCode.InternalServerError
                 };
             }

@@ -21,5 +21,8 @@
         //Добавление факта
         GettingFactName = 30,
         GettingFactSDescription = 31,
+
+        //Уточнение пердпочтений
+        GettingPreferencesCategories = 16,
     }
 }

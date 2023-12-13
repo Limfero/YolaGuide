@@ -1,4 +1,8 @@
-﻿namespace YolaGuide.Messages
+﻿using System;
+using YolaGuide.Domain.Entity;
+using YolaGuide.Domain.Enums;
+
+namespace YolaGuide.Messages
 {
     public static class Answer
     {
@@ -8,10 +12,22 @@
             "Hi, I'm Yola Guide! I will tell you about all the places in Yoshkar-Ola."
         };
 
+        public static List<string> SelectingMenuButton { get; set; } = new()
+        {
+            "Можете выбрать куда отправиться в меню!",
+            "You can pick where to go on the menu!"
+        };
+
         public static List<string> Settings { get; set; } = new()
         {
             "Что желаете настроить?",
             "What do you wish to customize?"
+        };
+
+        public static List<string> SuccessfullySetUpPreferences { get; set; } = new()
+        {
+            "Предпочтения успешно настроены!",
+            "Preferences have been successfully set up!"
         };
 
         public static List<string> SelectAdmin { get; set; } = new()
@@ -26,10 +42,28 @@
             "What do we add, sir?"
         };
 
+        public static List<string> ClarificationOfPreferences { get; set; } = new()
+        {
+            "Выберете категории, которые вам интересны:",
+            "Choose the categories you are interested in:"
+        };
+
         public static List<string> SuccessfullyAdded { get; set; } = new()
         {
             "Поздравляю! Ты смог добавить\nヽ(°□° )ノ\nКуда направимся теперь?",
             "Congratulations!!! You were able to add\nヽ(°□° )ノ\nWhere do we go now?"
+        };
+
+        public static List<string> NothingToOffer { get; set; } = new()
+        {
+            "Нам нечего вам предложить :с",
+            "We have nothing to offer you :c"
+        };
+
+        public static List<string> Loading { get; set; } = new()
+        {
+            "Загрузка....",
+            "Loading...."
         };
 
         // Ошибочки
@@ -125,5 +159,21 @@
             "Ну и давай свой факт(сначала на русском, потом через строчку на английском):",
             "So give me your fact(first in Russian, then across the line in English):"
         };
+
+        public static string GetPlaceInformation(Place place, Language language)
+        {
+            string[] name = place.Name.Split("\n\n");
+            string[] description = place.Name.Split("\n\n");
+
+            return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
+        }
+
+        public static string GetFactInformation(Fact fact, Language language)
+        {
+            string[] name = fact.Name.Split("\n\n");
+            string[] description = fact.Name.Split("\n\n");
+
+            return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
+        }
     }
 }

@@ -6,6 +6,10 @@ using Telegram.Bot.Types.Enums;
 using YolaGuide.Messages;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Controllers;
+using System.Threading;
+using YolaGuide.Domain.Entity;
+using Telegram.Bot.Types.ReplyMarkups;
+using System.Runtime.CompilerServices;
 
 namespace YolaGuide
 {
@@ -133,39 +137,94 @@ namespace YolaGuide
                         break;
                     }
 
-                    await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.WelcomeMessage[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetStart(chatId, user));
+                        replyMarkup: Keyboard.GetStart(chatId, user.Language));
                     break;
 
                 case "настройки":
                 case "settings":
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.Settings[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetSettings(user));
+                        replyMarkup: Keyboard.GetSettings(user.Language));
                     break;
 
                 case "админ панель":
                 case "admin panel":
-                    await botClient.SendTextMessageAsync(
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.WhatToAdd[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.ChoosingWhatToAdd(user));
+                        replyMarkup: Keyboard.ChoosingWhatToAdd(user.Language));
+                    break;
+
+                case "дай факт!":
+                case "give me a fact!":
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
+                    var fact = FactController.GetRandomFact();
+
+                    string? information;
+                    if (fact == null)
+                        information = Answer.NothingToOffer[(int)user.Language];
+                    else
+                        information = Answer.GetFactInformation(fact, user.Language);
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: information,
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.BackToMenu(user.Language));
+                    break;
+
+                case "посоветуй место!":
+                case "recommend a place!":
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
+                    var place = PlaceController.GetRandomPlace(user);
+
+                    if (place == null)
+                    {
+                        Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.NothingToOffer[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.BackToMenu(user.Language));
+
+                        break;
+                    }
+
+                    await PlaceController.GetPlaceCard(botClient, cancellationToken, place, user);
                     break;
 
                 default:
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
+                    if (user == null)
+                    {
+                        Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                               chatId: chatId,
+                               text: Answer.WrongCommand[(int)user.Language],
+                               cancellationToken: cancellationToken);
+                        break;
+                    }
+
                     switch (user.State)
                     {
                         case State.Start:
-                            await botClient.SendTextMessageAsync(
+                            Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                                 chatId: chatId,
                                 text: Answer.WrongCommand[(int)user.Language],
-                                cancellationToken: cancellationToken);
+                                cancellationToken: cancellationToken,
+                                replyMarkup: Keyboard.BackToMenu(user.Language));
                             break;
 
                         case State.AddPlace:
@@ -193,7 +252,16 @@ namespace YolaGuide
                     await ChangeLanguage(user, callbackQuery.Data);
                     goto case "Главное меню";
 
-                case "Уточнение категорий":
+                case "Уточнение пердпочтений":
+                    user.State = State.ClarificationOfPreferences;
+                    user.StateAdd = StateAdd.GettingPreferencesCategories;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                           messageId: Settings.LastBotMsg[chatId].MessageId,
+                           chatId: chatId,
+                           text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           cancellationToken: cancellationToken,
+                           replyMarkup: Keyboard.PreferenceSelection(null, user.Language));
                     break;
 
                 case "Уточнение языка":
@@ -213,16 +281,20 @@ namespace YolaGuide
                             chatId: chatId,
                             text: Answer.WelcomeMessage[(int)user.Language],
                             cancellationToken: cancellationToken,
-                            replyMarkup: Keyboard.ClarificationPreferences(user));
+                            replyMarkup: Keyboard.ClarificationPreferences(user.Language));
 
                         break;
                     }
 
+                    await botClient.DeleteMessageAsync(
+                        chatId: chatId,
+                        messageId: Settings.LastBotMsg[chatId].MessageId);
+
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Answer.WelcomeMessage[(int)user.Language],
+                        text: Answer.SelectingMenuButton[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetStart(chatId, user));
+                        replyMarkup: Keyboard.GetStart(chatId, user.Language));
                     break;
 
                 case "Место":
@@ -282,6 +354,10 @@ namespace YolaGuide
                         case State.AddCategory:
                             await CategoryController.AddCategoryAsync(botClient, new Message() { Text = callbackQuery.Data, Chat = callbackQuery.Message.Chat }, cancellationToken, user);
                             break;
+
+                        case State.ClarificationOfPreferences:
+                            await CategoryController.ClarificationOfPreferencesAsync(botClient, new Message() { Text = callbackQuery.Data, Chat = callbackQuery.Message.Chat }, cancellationToken, user);
+                            break;
                     }
                     break;
             }
@@ -304,6 +380,19 @@ namespace YolaGuide
             }
 
             await UserController.UpdateUser(user);
+        }
+
+        private static async Task CloseReplyMenu(ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken, Language language)
+        {
+            Message sentMessage = await botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: Answer.Loading[(int)language],
+                replyMarkup: new ReplyKeyboardRemove(),
+                cancellationToken: cancellationToken);
+
+            await botClient.DeleteMessageAsync(
+                chatId: chatId,
+                messageId: sentMessage.MessageId);
         }
     }
 }

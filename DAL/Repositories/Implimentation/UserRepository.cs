@@ -1,4 +1,5 @@
-﻿using YolaGuide.DAL.Repositories.Implementation;
+﻿using Microsoft.EntityFrameworkCore;
+using YolaGuide.DAL.Repositories.Implementation;
 using YolaGuide.DAL.Repositories.Interfaces;
 using YolaGuide.Domain.Entity;
 
@@ -12,7 +13,12 @@ namespace YolaGuide.DAL.Repositories.Implimentation
 
         public User GetUserById(long id)
         {
-            return _dbContext.Set<User>().FirstOrDefault(user => user.Id == id);
+            return _dbContext.Users
+                .Include(user => user.Categories)
+                .Include(user => user.Routes)
+                .Include(user => user.Places)
+                .AsSplitQuery()
+                .FirstOrDefault(user => user.Id == id);
         }
     }
 }

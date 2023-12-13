@@ -44,5 +44,28 @@ namespace YolaGuide.Service
                 };
             }
         }
+
+        public IBaseResponse<List<Fact>> GetAllFact()
+        {
+            try
+            {
+                var facts = _factRepository.GetAll().ToList();
+
+                return new BaseResponse<List<Fact>>()
+                {
+                    Data = facts,
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<List<Fact>>()
+                {
+                    Description = $"[FactService.GetAllFact] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
     }
 }

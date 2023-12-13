@@ -43,6 +43,29 @@ namespace YolaGuide.Service
             }
         }
 
+        public IBaseResponse<List<Category>> GetAllSubcategores()
+        {
+            try
+            {
+                var response = _categoryRepository.GetAllSubcategories();
+
+                return new BaseResponse<List<Category>>()
+                {
+                    Data = response,
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<List<Category>>()
+                {
+                    Description = $"[CategoryService.GetFirstCategory] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
         public IBaseResponse<Category> GetCategoryByName(string name)
         {
             try

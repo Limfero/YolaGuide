@@ -69,7 +69,7 @@ namespace YolaGuide.Controllers
                         chatId: chatId,
                         text: Answer.EnteringCategorySubcategory[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.CategorySelection(null, user));
+                        replyMarkup: Keyboard.CategorySelection(null, user.Language));
                     break;
 
                 case StateAdd.GettingCategorySubcategory:
@@ -78,7 +78,7 @@ namespace YolaGuide.Controllers
                         chatId: chatId,
                         text: Answer.EnteringCategorySubcategory[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.CategorySelection(GetCategoryByName(message.Text), user));
+                        replyMarkup: Keyboard.CategorySelection(GetCategoryByName(message.Text), user.Language));
                     break;
 
                 case StateAdd.End:
@@ -93,7 +93,43 @@ namespace YolaGuide.Controllers
                         chatId: chatId,
                         text: Answer.SuccessfullyAdded[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetStart(chatId, user));
+                        replyMarkup: Keyboard.GetStart(chatId, user.Language));
+                    break;
+            }
+
+            await UserController.UpdateUser(user);
+        }
+
+        public static async Task ClarificationOfPreferencesAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            var userInput = message.Text;
+            var chatId = message.Chat.Id;
+
+            switch (user.StateAdd)
+            {
+                case StateAdd.GettingPreferencesCategories:
+                    var category = GetCategoryByName(message.Text);
+
+                    if (category.Subcategories.Count == 0)
+                    {
+                        user.Categories.Add(category);
+                        category = null;
+                    }
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                           messageId: Settings.LastBotMsg[chatId].MessageId,
+                           chatId: chatId,
+                           text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           cancellationToken: cancellationToken,
+                           replyMarkup: Keyboard.PreferenceSelection(category, user.Language));
+                    break;
+                case StateAdd.End:
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                           messageId: Settings.LastBotMsg[chatId].MessageId,
+                           chatId: chatId,
+                           text: Answer.SuccessfullySetUpPreferences[(int)user.Language],
+                           cancellationToken: cancellationToken,
+                           replyMarkup: Keyboard.SuccessfullyCustomizedPreferences(user.Language));
                     break;
             }
 
