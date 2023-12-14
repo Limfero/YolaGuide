@@ -7,6 +7,8 @@ using YolaGuide.Domain.Enums;
 using YolaGuide.Messages;
 using YolaGuide.DAL.Repositories.Implimentation;
 using YolaGuide.Domain.Entity;
+using System.Threading;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace YolaGuide.Controllers
 {
@@ -32,9 +34,29 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-        public static List<Place> GetByCategory(Category category)
+        public static List<Place> GetPlacesByName(string name)
         {
-            var response = _placeService.GetPlaceByCategory(category);
+            var response = _placeService.GetPlacesByName(name);
+
+            if (response.StatusCode == StatusCode.OK)
+                return response.Data;
+
+            throw new Exception(response.Description);
+        }
+
+        public static List<Place> GetPlacesByCategory(Category category)
+        {
+            var response = _placeService.GetPlacesByCategory(category);
+
+            if (response.StatusCode == StatusCode.OK)
+                return response.Data;
+
+            throw new Exception(response.Description);
+        }
+
+        public static Place GetPlacesById(int id)
+        {
+            var response = _placeService.GetPlaceById(id);
 
             if (response.StatusCode == StatusCode.OK)
                 return response.Data;
@@ -59,6 +81,15 @@ namespace YolaGuide.Controllers
 
             switch (user.StateAdd)
             {
+                case StateAdd.GettingPlaceStart:
+                    user.StateAdd = StateAdd.GettingPlaceName;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.EnteringPlaceName[(int)user.Language],
+                        cancellationToken: cancellationToken);
+                    break;
                 case StateAdd.GettingPlaceName:
                     if (await IsNotCorrectInput(userInput.Split("\n\n").Length == (int)Language.English + 1, userInput, botClient, cancellationToken, user))
                         break;
@@ -77,11 +108,21 @@ namespace YolaGuide.Controllers
                         break;
 
                     _newUserPlaces[chatId].Description = userInput;
-                    user.StateAdd = StateAdd.GettingPlaceContactInformation;
+                    user.StateAdd = StateAdd.GettingPlaceAdress;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.EnteringPlaceAdress[(int)user.Language],
+                        cancellationToken: cancellationToken);
+                    break;
+
+                case StateAdd.GettingPlaceAdress:
+                    _newUserPlaces[chatId].Adress = userInput;
+                    user.StateAdd = StateAdd.GettingPlaceContactInformation;
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.EnteringPlaceContactInformation[(int)user.Language],
                         cancellationToken: cancellationToken);
                     break;
 
@@ -100,7 +141,8 @@ namespace YolaGuide.Controllers
 
                 case StateAdd.GettingPlaceImage:
                     var fileId = message.Photo.Last().FileId;
-                    var destinationImagePath = Settings.DestinationImagePath + $"{_newUserPlaces[chatId].Name}Place.png";
+                    var fileName = _newUserPlaces[chatId].Name.Split("\n\n")[(int)Language.Russian] + _newUserPlaces[chatId].Adress;
+                    var destinationImagePath = Settings.DestinationImagePath + $"{fileName}Place.png";
 
                     await using (Stream fileStream = System.IO.File.Create(new string(destinationImagePath)))
                     {
@@ -149,7 +191,11 @@ namespace YolaGuide.Controllers
 
                 case StateAdd.GettingPlaceCategories:
                     if (CategoryController.GetCategoryByName(userInput) == null)
+                    {
+                        await ShowError(botClient, cancellationToken, user);   
+
                         break;
+                    }
 
                     _newUserPlaces[chatId].Categories.Add(CategoryController.GetCategoryByName(userInput));
 
@@ -179,6 +225,111 @@ namespace YolaGuide.Controllers
             await UserController.UpdateUser(user);
         }
 
+        public static async Task AddPlaceInPlanAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            var chatId = message.Chat.Id;
+
+            switch (user.StateAdd)
+            {
+                case StateAdd.GettingPlanStart:
+                    user.StateAdd = StateAdd.GettingPlanCategory;
+
+                    if (user.Categories.Count == 0)
+                    {
+                        Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: Answer.NoPlanForToday[(int)user.Language],
+                                cancellationToken: cancellationToken,
+                                replyMarkup: Keyboard.PlanCategorySelection(null, user.Language));
+
+                        break;
+                    }
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                            chatId: chatId,
+                            text: Answer.WhatToAdd[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.PlanCategorySelection(null, user.Language));
+                    break;
+                case StateAdd.GettingPlanCategory:
+                    var category = CategoryController.GetCategoryByName(message.Text);
+
+                    if (CategoryController.GetCategoryByName(message.Text) == null)
+                    {
+                        await ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    if (category.Subcategories.Count == 0)
+                    {
+                        user.StateAdd = StateAdd.GettingPlanAdress;
+
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.EnteringPlanCategory[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetNamePlaceByCategory(category, user.Language));
+
+                        break;
+                    }
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.NoPlanForToday[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.PlanCategorySelection(category, user.Language));
+                    break;
+
+                case StateAdd.GettingPlanAdress:
+                    user.StateAdd = StateAdd.GettingPlanPlace;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.EnteringPlanAdress[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.GetPlaceAddressesByName(message.Text, user.Language));
+                    break;
+
+                case StateAdd.GettingPlanPlace:
+                    var place = GetPlacesById(int.Parse(message.Text));
+
+                    if (GetPlacesById(int.Parse(message.Text)) == null)
+                    {
+                        await ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    user.StateAdd = StateAdd.End;
+
+                    await GetPlaceCard(botClient, cancellationToken, place, user);
+                    break;
+
+                case StateAdd.End:
+                    place = GetPlacesById(int.Parse(message.Text));
+
+                    if (GetPlacesById(int.Parse(message.Text)) == null)
+                    {
+                        await ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    user.Places.Add(place);
+                    user.State = State.Start;
+                    user.StateAdd = StateAdd.Start;
+
+                    await GetPlaceCard(botClient, cancellationToken, place, user);
+                    break;
+            }
+
+            await UserController.UpdateUser(user);
+        }
+
         public static Place GetRandomPlace(Domain.Entity.User user)
         {
             var places = GetAll();
@@ -187,7 +338,7 @@ namespace YolaGuide.Controllers
                 return null;
 
             if (user.Categories.Count != 0)
-                places = GetByCategory(user.Categories[_random.Next(user.Categories.Count)]);
+                places = GetPlacesByCategory(user.Categories[_random.Next(user.Categories.Count)]);
 
             return places[_random.Next(places.Count)];
         }
@@ -215,6 +366,14 @@ namespace YolaGuide.Controllers
                        cancellationToken: cancellationToken);
 
             return true;
+        }
+
+        private static async Task ShowError(ITelegramBotClient botClient, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
+                chatId: user.Id,
+                text: Answer.Error[(int)user.Language],
+                cancellationToken: cancellationToken);
         }
     }
 }

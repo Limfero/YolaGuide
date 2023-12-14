@@ -49,11 +49,12 @@ namespace YolaGuide.Service
             }
         }
 
-        public IBaseResponse<List<Place>> GetPlaceByCategory(Category category)
+        public IBaseResponse<List<Place>> GetPlacesByName(string name)
         {
             try
             {
-                var places = _placeRepository.GetPlaceByCategory(category);
+                var places = _placeRepository.GetPlacesByName(name);
+
 
                 return new BaseResponse<List<Place>>()
                 {
@@ -67,7 +68,55 @@ namespace YolaGuide.Service
             {
                 return new BaseResponse<List<Place>>()
                 {
-                    Description = $"[PlaceService.GetPlaceByCategory] - {ex.Message}",
+                    Description = $"[PlaceService.GetAdressesPlace] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public IBaseResponse<List<Place>> GetPlacesByCategory(Category category)
+        {
+            try
+            {
+                var places = _placeRepository.GetPlacesByCategory(category);
+
+                return new BaseResponse<List<Place>>()
+                {
+                    Data = places,
+                    Description = "Места найдены!",
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<List<Place>>()
+                {
+                    Description = $"[PlaceService.GetPlacesByCategory] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public IBaseResponse<Place> GetPlaceById(int id)
+        {
+            try
+            {
+                var places = _placeRepository.GetPlaceById(id);
+
+                return new BaseResponse<Place>()
+                {
+                    Data = places,
+                    Description = "Место найдены!",
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<Place>()
+                {
+                    Description = $"[PlaceService.GetPlaceById] - {ex.Message}",
                     StatusCode = StatusCode.InternalServerError
                 };
             }

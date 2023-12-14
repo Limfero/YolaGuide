@@ -4,6 +4,10 @@ namespace YolaGuide.DAL.Repositories.Interfaces
 {
     public interface IPlaceRepository : IBaseRepository<Place>
     {
-        List<Place> GetPlaceByCategory(Category category);
+        List<Place> GetPlacesByCategory(Category category);
+
+        List<Place> GetPlacesByName(string name);
+
+        Place GetPlaceById(int id);
     }
 }

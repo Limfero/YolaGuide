@@ -16,6 +16,8 @@ namespace YolaGuide
 
         public static string URLYandexOrganization { get { return "https://yandex.ru/maps/org/{0}"; } }
 
+        public static string URLYandexRoute { get { return "https://yandex.ru/maps/?rtext={0}&rtt=mt"; } }
+
         public static List<long> Admins { get { return new() { 1059169240 }; } }
 
         public static Dictionary<long, Message> LastBotMsg = new();

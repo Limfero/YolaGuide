@@ -7,22 +7,33 @@
 
         //Добавление места
         GettingPlaceName = 10,
-        GettingPlaceDescription = 11,
-        GettingPlaceImage = 12,
-        GettingPlaceContactInformation = 13,
-        GettingPlaceYId = 14,
-        GettingPlaceCoordinates = 15,
-        GettingPlaceCategories = 16,
+        GettingPlaceStart = 11,
+        GettingPlaceDescription = 12,
+        GettingPlaceImage = 13,
+        GettingPlaceContactInformation = 14,
+        GettingPlaceAdress = 15,
+        GettingPlaceYId = 16,
+        GettingPlaceCoordinates = 17,
+        GettingPlaceCategories = 18,
 
         //Добавление категории
         GettingCategoryName = 20,
-        GettingCategorySubcategory = 21,
+        GettingCategoryStart = 21,
+        GettingCategorySubcategory = 22,
 
         //Добавление факта
         GettingFactName = 30,
-        GettingFactSDescription = 31,
+        GettingFactStart = 31,
+        GettingFactDescription = 32,
 
         //Уточнение пердпочтений
-        GettingPreferencesCategories = 16,
+        GettingPreferencesCategories = 40,
+        GettingPreferencesStart = 41,
+
+        //Добавление места в план на сегодня
+        GettingPlanCategory = 50,
+        GettingPlanStart = 51,
+        GettingPlanAdress = 52,
+        GettingPlanPlace = 53
     }
 }

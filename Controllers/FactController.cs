@@ -49,6 +49,16 @@ namespace YolaGuide.Controllers
 
             switch (user.StateAdd)
             {
+                case StateAdd.GettingFactStart:
+                    user.StateAdd = StateAdd.GettingFactName;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.EnteringFactName[(int)user.Language],
+                        cancellationToken: cancellationToken);
+                    break;
+
                 case StateAdd.GettingFactName:
                     if (await IsNotCorrectInput(userInput, botClient, chatId, cancellationToken, user))
                         break;
@@ -62,7 +72,7 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingFactSDescription:
+                case StateAdd.GettingFactDescription:
                     if (await IsNotCorrectInput(userInput, botClient, chatId, cancellationToken, user))
                         break;
 

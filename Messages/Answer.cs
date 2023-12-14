@@ -38,8 +38,8 @@ namespace YolaGuide.Messages
 
         public static List<string> WhatToAdd { get; set; } = new()
         {
-            "Что будем добавлять, сер?",
-            "What do we add, sir?"
+            "Что будем добавлять?",
+            "What do we add?"
         };
 
         public static List<string> ClarificationOfPreferences { get; set; } = new()
@@ -66,6 +66,12 @@ namespace YolaGuide.Messages
             "Loading...."
         };
 
+        public static List<string> PlacesInPlan { get; set; } = new()
+        {
+            "В вашем плане на сегодня:\n",
+            "In your plan for today:\n"
+        };
+
         // Ошибочки
         public static List<string> WrongCommand { get; set; } = new()
         {
@@ -90,7 +96,13 @@ namespace YolaGuide.Messages
             "Ой... Ошибочка в формате написания. Пробуй ещё раз, пожалуйста!",
             "Oops... Wrong spelling format. Try again, please!"
         };
-        
+
+        public static List<string> Error { get; set; } = new()
+        {
+            "Упс... Я такого не знаю. Попробуйте выбрать из меню выше!",
+            "Oops... I don't know that one. Try selecting from the menu above!"
+        };
+
         // Добавление места
         public static List<string> EnteringPlaceName { get; set; } = new()
         {
@@ -106,8 +118,15 @@ namespace YolaGuide.Messages
 
         public static List<string> EnteringPlaceAdress { get; set; } = new()
         {
-            "Введи контактнцю информацию для этого места(сначала на русском, потом через строчку на английском):",
-            "Enter the address of this place(first in Russian, then a line later in English):"
+            "Введи адрес места:",
+            "Enter the address of the place:"
+        };
+
+
+        public static List<string> EnteringPlaceContactInformation { get; set; } = new()
+        {
+            "Введи контактную информацию для этого места(сначала на русском, потом через строчку на английском):",
+            "Enter the contact information for this place (first in Russian, then across the line in English):"
         };
 
         public static List<string> EnteringPlaceImage { get; set; } = new()
@@ -124,8 +143,8 @@ namespace YolaGuide.Messages
 
         public static List<string> EnteringPlaceCoordinates { get; set; } = new()
         {
-            "Введи координаты в формате - долгота,широта :",
-            "Enter coordinates in the format - longitude,latitude :"
+            "Введи координаты:",
+            "Enter coordinates:"
         };
 
         public static List<string> EnteringPlaceCategories{ get; set; } = new()
@@ -160,10 +179,30 @@ namespace YolaGuide.Messages
             "So give me your fact(first in Russian, then across the line in English):"
         };
 
+
+        //Добавление в план
+        public static List<string> NoPlanForToday { get; set; } = new()
+        {
+            "У вас пока нет планов. Пора составить!\n\nВыбирайте куда хотите отправиться сегодня:",
+            "You don't have plans yet. It's time to make some!\n\nChoose where you want to go today:"
+        };
+
+        public static List<string> EnteringPlanCategory { get; set; } = new()
+        {
+            "А теперь выберете место:",
+            "Now pick a place:"
+        };
+
+        public static List<string> EnteringPlanAdress { get; set; } = new()
+        {
+            "И остаось выбрать адрес места:",
+            "And the only thing left to do is pick an address for the place:"
+        };
+
         public static string GetPlaceInformation(Place place, Language language)
         {
             string[] name = place.Name.Split("\n\n");
-            string[] description = place.Name.Split("\n\n");
+            string[] description = place.Description.Split("\n\n");
 
             return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
         }
@@ -171,9 +210,25 @@ namespace YolaGuide.Messages
         public static string GetFactInformation(Fact fact, Language language)
         {
             string[] name = fact.Name.Split("\n\n");
-            string[] description = fact.Name.Split("\n\n");
+            string[] description = fact.Description.Split("\n\n");
 
             return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
+        }
+
+        public static string GetPlanInformation(User user)
+        {
+            var placesInPlan = user.Places;
+            string result = PlacesInPlan[(int)user.Language];
+
+            for(int i = 0; i < placesInPlan.Count; i++) 
+            {
+                var name = placesInPlan[i].Name.Split("\n\n")[(int)user.Language];
+                var adress = placesInPlan[i].Adress;
+
+                result += $"{i + 1}) {name}\n{adress}\n\n";
+            }
+
+            return result;
         }
     }
 }

@@ -28,6 +28,10 @@ namespace YolaGuide.DAL.Configurations
                 .HasColumnName("contact_information")
                 .IsRequired();
 
+            builder.Property(place => place.Adress)
+               .HasColumnName("adress")
+               .IsRequired();
+
             builder.Property(place => place.Image)
                  .HasColumnName("route_to_image");
 

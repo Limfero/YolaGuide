@@ -58,6 +58,15 @@ namespace YolaGuide.Controllers
 
             switch (user.StateAdd)
             {
+                case StateAdd.GettingCategoryStart:
+                    user.StateAdd = StateAdd.GettingCategoryName;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.EnteringCategoryName[(int)user.Language],
+                        cancellationToken: cancellationToken);
+                    break;
                 case StateAdd.GettingCategoryName:
                     if (await IsNotCorrectInput(userInput, botClient, chatId, cancellationToken, user))
                         break;
@@ -73,6 +82,13 @@ namespace YolaGuide.Controllers
                     break;
 
                 case StateAdd.GettingCategorySubcategory:
+                    if (GetCategoryByName(message.Text) == null)
+                    {
+                        await ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
@@ -102,13 +118,40 @@ namespace YolaGuide.Controllers
 
         public static async Task ClarificationOfPreferencesAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
-            var userInput = message.Text;
             var chatId = message.Chat.Id;
 
             switch (user.StateAdd)
             {
+                case StateAdd.GettingPreferencesStart:
+                    user.StateAdd = StateAdd.GettingPreferencesCategories;
+
+                    if(user == null)
+                    {
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.WelcomeMessage[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.ClarificationPreferences(user.Language));
+                        break;
+                    }
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                           messageId: Settings.LastBotMsg[chatId].MessageId,
+                           chatId: chatId,
+                           text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           cancellationToken: cancellationToken,
+                           replyMarkup: Keyboard.PreferenceSelection(null, user.Language));
+                    break;
                 case StateAdd.GettingPreferencesCategories:
                     var category = GetCategoryByName(message.Text);
+
+                    if (GetCategoryByName(message.Text) == null)
+                    {
+                        await ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
 
                     if (category.Subcategories.Count == 0)
                     {
@@ -146,6 +189,14 @@ namespace YolaGuide.Controllers
                        cancellationToken: cancellationToken);
 
             return true;
+        }
+
+        private static async Task ShowError(ITelegramBotClient botClient, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
+                chatId: user.Id,
+                text: Answer.Error[(int)user.Language],
+                cancellationToken: cancellationToken);
         }
     }
 }
