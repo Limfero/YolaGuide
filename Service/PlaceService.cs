@@ -146,5 +146,29 @@ namespace YolaGuide.Service
             }
         }
 
+        public IBaseResponse<List<Place>> GetPlaceToString(string userInput)
+        {
+            try
+            {
+                var places = _placeRepository.GetAll().ToList();
+
+                return new BaseResponse<List<Place>>()
+                {
+                    Data = places,
+                    Description = "Места найдены!",
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<List<Place>>()
+                {
+                    Description = $"[PlaceService.GetPlaceByCategory] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
     }
 }

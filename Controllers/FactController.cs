@@ -49,7 +49,7 @@ namespace YolaGuide.Controllers
 
             switch (user.StateAdd)
             {
-                case StateAdd.GettingFactStart:
+                case StateAdd.StartAddPlan:
                     user.StateAdd = StateAdd.GettingFactName;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
@@ -60,7 +60,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case StateAdd.GettingFactName:
-                    if (await IsNotCorrectInput(userInput, botClient, chatId, cancellationToken, user))
+                    if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserFact[chatId].Name = userInput;
@@ -73,7 +73,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case StateAdd.GettingFactDescription:
-                    if (await IsNotCorrectInput(userInput, botClient, chatId, cancellationToken, user))
+                    if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserFact[chatId].Description = userInput;
@@ -104,18 +104,6 @@ namespace YolaGuide.Controllers
                 return null;
 
             return facts[_random.Next(facts.Count)];
-        }
-
-        private static async Task<bool> IsNotCorrectInput(string userInput, ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken, Domain.Entity.User user)
-        {
-            if (userInput.Split("\n\n").Length == (int)Language.English + 1) return false;
-
-            Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
-            chatId: chatId,
-                       text: Answer.WrongInputFormat[(int)user.Language],
-                       cancellationToken: cancellationToken);
-
-            return true;
         }
     }
 }

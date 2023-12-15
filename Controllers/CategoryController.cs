@@ -58,7 +58,7 @@ namespace YolaGuide.Controllers
 
             switch (user.StateAdd)
             {
-                case StateAdd.GettingCategoryStart:
+                case StateAdd.StartAddCategory:
                     user.StateAdd = StateAdd.GettingCategoryName;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
@@ -68,7 +68,7 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
                 case StateAdd.GettingCategoryName:
-                    if (await IsNotCorrectInput(userInput, botClient, chatId, cancellationToken, user))
+                    if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserCategory[chatId].Name = userInput;
@@ -84,7 +84,7 @@ namespace YolaGuide.Controllers
                 case StateAdd.GettingCategorySubcategory:
                     if (GetCategoryByName(message.Text) == null)
                     {
-                        await ShowError(botClient, cancellationToken, user);
+                        await BaseController.ShowError(botClient, cancellationToken, user);
 
                         break;
                     }
@@ -122,7 +122,7 @@ namespace YolaGuide.Controllers
 
             switch (user.StateAdd)
             {
-                case StateAdd.GettingPreferencesStart:
+                case StateAdd.StartRefiningPreferences:
                     user.StateAdd = StateAdd.GettingPreferencesCategories;
 
                     if(user == null)
@@ -148,7 +148,7 @@ namespace YolaGuide.Controllers
 
                     if (GetCategoryByName(message.Text) == null)
                     {
-                        await ShowError(botClient, cancellationToken, user);
+                        await BaseController.ShowError(botClient, cancellationToken, user);
 
                         break;
                     }
@@ -177,26 +177,6 @@ namespace YolaGuide.Controllers
             }
 
             await UserController.UpdateUser(user);
-        }
-
-        private static async Task<bool> IsNotCorrectInput(string userInput, ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken, Domain.Entity.User user)
-        {
-            if (userInput.Split("\n\n").Length == (int)Language.English + 1) return false;
-
-            Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
-            chatId: chatId,
-                       text: Answer.WrongInputFormat[(int)user.Language],
-                       cancellationToken: cancellationToken);
-
-            return true;
-        }
-
-        private static async Task ShowError(ITelegramBotClient botClient, CancellationToken cancellationToken, Domain.Entity.User user)
-        {
-            Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
-                chatId: user.Id,
-                text: Answer.Error[(int)user.Language],
-                cancellationToken: cancellationToken);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using YolaGuide.DAL.Repositories.Implementation;
 using YolaGuide.DAL.Repositories.Interfaces;
 using YolaGuide.Domain.Entity;
@@ -17,7 +18,8 @@ namespace YolaGuide.DAL.Repositories.Implimentation
                 .Include(place => place.Categories)
                 .Include(place => place.Routes)
                 .AsSplitQuery()
-                .Where(place => place.Categories.Contains(category)).ToList();
+                .Where(place => place.Categories.Contains(category))
+                .ToList();
         }
 
         public List<Place> GetPlacesByName(string name)
@@ -26,7 +28,8 @@ namespace YolaGuide.DAL.Repositories.Implimentation
                 .Include(place => place.Categories)
                 .Include(place => place.Routes)
                 .AsSplitQuery()
-                .Where(place => place.Name == name).ToList();
+                .Where(place => place.Name == name)
+                .ToList();
         }
 
         public Place GetPlaceById(int id)
@@ -38,7 +41,15 @@ namespace YolaGuide.DAL.Repositories.Implimentation
                 .FirstOrDefault(place => place.Id == id);
         }
 
-        //Where(x => DbFunctions.FtxContains(DbFunctions.ColumnList(x.Note, x.BillingCity), "search string"))
+        public List<Place> Search(string userInput)
+        {
+            return _dbContext.Plases
+                .Include(place => place.Categories)
+                .Include(place => place.Routes)
+                .AsSplitQuery()
+                .Where(place => EF.Functions.FreeText(place.Name, userInput))
+                .ToList();
+        }
     }
 }
 

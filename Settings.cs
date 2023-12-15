@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.ConstrainedExecution;
 using Telegram.Bot.Types;
 using YolaGuide.Domain.Enums;
 
@@ -17,6 +18,8 @@ namespace YolaGuide
         public static string URLYandexOrganization { get { return "https://yandex.ru/maps/org/{0}"; } }
 
         public static string URLYandexRoute { get { return "https://yandex.ru/maps/?rtext={0}&rtt=mt"; } }
+
+        public static int NumberObjectsPerPage { get { return 6; } }
 
         public static List<long> Admins { get { return new() { 1059169240 }; } }
 

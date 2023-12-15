@@ -199,6 +199,13 @@ namespace YolaGuide.Messages
             "And the only thing left to do is pick an address for the place:"
         };
 
+        //Поиск
+        public static List<string> EnteringStringToSearch { get; set; } = new()
+        {
+            "Введите то, что хотите найти:",
+            "Enter what you want to find:"
+        };
+
         public static string GetPlaceInformation(Place place, Language language)
         {
             string[] name = place.Name.Split("\n\n");

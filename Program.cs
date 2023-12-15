@@ -6,10 +6,7 @@ using Telegram.Bot.Types.Enums;
 using YolaGuide.Messages;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Controllers;
-using System.Threading;
-using YolaGuide.Domain.Entity;
 using Telegram.Bot.Types.ReplyMarkups;
-using System.Runtime.CompilerServices;
 
 namespace YolaGuide
 {
@@ -121,9 +118,6 @@ namespace YolaGuide
 
             Console.WriteLine($"Получено сообщение '{messageText}' в чате {chatId} от {message.Chat.FirstName}.");
 
-            if(user != null)
-                await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
-
             switch (messageText.ToLower())
             {
                 case "/start":
@@ -151,6 +145,8 @@ namespace YolaGuide
 
                 case "настройки":
                 case "settings":
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.Settings[(int)user.Language],
@@ -160,6 +156,8 @@ namespace YolaGuide
 
                 case "админ панель":
                 case "admin panel":
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.WhatToAdd[(int)user.Language],
@@ -169,6 +167,8 @@ namespace YolaGuide
 
                 case "дай факт!":
                 case "give me a fact!":
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
                     var fact = FactController.GetRandomFact();
 
                     string? information;
@@ -186,6 +186,8 @@ namespace YolaGuide
 
                 case "посоветуй место!":
                 case "recommend a place!":
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
                     var place = PlaceController.GetRandomPlace(user);
 
                     if (place == null)
@@ -204,10 +206,12 @@ namespace YolaGuide
 
                 case "план на сегодня":
                 case "today's plan":
-                    if(user.Places.Count == 0)
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
+                    if (user.Places.Count == 0)
                     {
                         user.State = State.AddPlaceToPlan;
-                        user.StateAdd = StateAdd.GettingPlanStart;
+                        user.StateAdd = StateAdd.StartAddPlan;
                         await UserController.UpdateUser(user);
 
                         PlaceController.AddNewPairInDictionary(chatId);
@@ -221,6 +225,17 @@ namespace YolaGuide
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.Back(user.Language));
 
+                    break;
+
+                case "поиск":
+                case "search":
+                    await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
+
+                    user.State = State.Search;
+                    user.StateAdd = StateAdd.StartSearch;
+                    await UserController.UpdateUser(user);
+
+                    await PlaceController.Search();
                     break;
 
                 default:
@@ -241,13 +256,12 @@ namespace YolaGuide
 
                     if (statesNoWrite.Contains(user.State)) 
                     {
-
-
                         Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
                             chatId: user.Id,
                             text: Answer.WrongCommand[(int)user.Language],
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.Back(user.Language));
+
                         break; 
                     }
 
@@ -272,7 +286,7 @@ namespace YolaGuide
 
                 case "Уточнение пердпочтений":
                     user.State = State.ClarificationOfPreferences;
-                    user.StateAdd = StateAdd.GettingPreferencesStart;
+                    user.StateAdd = StateAdd.StartRefiningPreferences;
 
                     await CategoryController.ClarificationOfPreferencesAsync(botClient, message, cancellationToken, user);
                     break;
@@ -290,11 +304,13 @@ namespace YolaGuide
                     if (user == null)
                     {
                         user.State = State.ClarificationOfPreferences;
-                        user.StateAdd = StateAdd.GettingPreferencesStart;
+                        user.StateAdd = StateAdd.StartRefiningPreferences;
 
                         await CategoryController.ClarificationOfPreferencesAsync(botClient, message, cancellationToken, user);
                         break;
                     }
+
+                    await ResettingUserStates(user);
 
                     await botClient.DeleteMessageAsync(
                         chatId: chatId,
@@ -309,7 +325,7 @@ namespace YolaGuide
 
                 case "Место":
                     user.State = State.AddPlace;
-                    user.StateAdd = StateAdd.GettingPlaceStart;
+                    user.StateAdd = StateAdd.StartAddPlace;
                     await UserController.UpdateUser(user);
 
                     PlaceController.AddNewPairInDictionary(chatId);
@@ -323,7 +339,7 @@ namespace YolaGuide
 
                 case "Категорию":
                     user.State = State.AddCategory;
-                    user.StateAdd = StateAdd.GettingCategoryStart;
+                    user.StateAdd = StateAdd.StartAddCategory;
                     await UserController.UpdateUser(user);
 
                     CategoryController.AddNewPairInDictionary(chatId);
@@ -333,7 +349,7 @@ namespace YolaGuide
 
                 case "Факт":
                     user.State = State.AddFact;
-                    user.StateAdd = StateAdd.GettingFactStart;
+                    user.StateAdd = StateAdd.StartAddPlan;
                     await UserController.UpdateUser(user);
 
                     FactController.AddNewPairInDictionary(chatId);
@@ -347,7 +363,7 @@ namespace YolaGuide
 
                 case "Редактировать план":
                     user.State = State.AddPlaceToPlan;
-                    user.StateAdd = StateAdd.GettingPlanStart;
+                    user.StateAdd = StateAdd.StartAddPlan;
                     await UserController.UpdateUser(user);
 
                     PlaceController.AddNewPairInDictionary(chatId);
@@ -409,11 +425,11 @@ namespace YolaGuide
         {
             List<StateAdd> startState = new() { 
                 StateAdd.Start, 
-                StateAdd.GettingPlaceStart, 
-                StateAdd.GettingCategoryStart, 
-                StateAdd.GettingFactStart, 
-                StateAdd.GettingPreferencesStart,
-                StateAdd.GettingPlanStart
+                StateAdd.StartAddPlace, 
+                StateAdd.StartAddCategory, 
+                StateAdd.StartAddPlan, 
+                StateAdd.StartRefiningPreferences,
+                StateAdd.StartAddPlan
             };
 
             if (startState.Contains(user.StateAdd))

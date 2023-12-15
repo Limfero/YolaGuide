@@ -9,5 +9,6 @@
         AddFact = 12,
         ClarificationOfPreferences = 13,
         AddPlaceToPlan = 14,
+        Search = 15,
     }
 }

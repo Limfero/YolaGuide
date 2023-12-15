@@ -250,23 +250,34 @@ namespace YolaGuide.Messages
             return keyboard;
         }
 
-        public static InlineKeyboardMarkup GetNamePlaceByCategory(Category category, Language language)
+        public static InlineKeyboardMarkup GetNamePlaceByCategory(Category category, Language language, int numberPage)
         {
-            var places = PlaceController.GetPlacesByCategory(category).Select(place => place.Name).Distinct();
+            var places = PlaceController.GetPlacesByCategory(category).Select(place => place.Name).Distinct().ToList();
+
+            int countPage = (int)Math.Ceiling((double)places.Count / Settings.NumberObjectsPerPage);
+            int startPosition = (numberPage - 1) * Settings.NumberObjectsPerPage;
+            int endPosition = numberPage * Settings.NumberObjectsPerPage;
 
             var keyboard = new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>());
 
-            foreach (var namePlace in places)
+            for(int i = startPosition; i < endPosition; i++)
             {
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData(namePlace)
+                    InlineKeyboardButton.WithCallbackData(places[i])
                 }));
             }
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
+                   InlineKeyboardButton.WithCallbackData("<", numberPage == 1 ? $"{category.Name} 1" : $"{category.Name} {numberPage - 1}"),
+                   InlineKeyboardButton.WithCallbackData($"{numberPage}/{countPage}" + category.Name, "Назад"),
+                   InlineKeyboardButton.WithCallbackData(">", numberPage == countPage ? $"{category.Name} {countPage}" : $"{category.Name} {numberPage + 1}"),
+            }));
+
+            keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+            {
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
             }));
 
             return keyboard;
