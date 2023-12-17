@@ -54,6 +54,12 @@ namespace YolaGuide.Messages
             "Congratulations!!! You were able to add\nヽ(°□° )ノ\nWhere do we go now?"
         };
 
+        public static List<string> SuccessfullyDellete { get; set; } = new()
+        {
+            "Успешно удалено!\nКуда направимся теперь?",
+            "Successfully deleted!\nWhere do we go now?"
+        };
+
         public static List<string> NothingToOffer { get; set; } = new()
         {
             "Нам нечего вам предложить :с",
@@ -118,8 +124,8 @@ namespace YolaGuide.Messages
 
         public static List<string> EnteringPlaceAdress { get; set; } = new()
         {
-            "Введи адрес места:",
-            "Enter the address of the place:"
+            "Введи адрес места(сначала на русском, потом через строчку на английском):",
+            "Enter the address of the place(first in Russian, then a line later in English):"
         };
 
 
@@ -179,6 +185,36 @@ namespace YolaGuide.Messages
             "So give me your fact(first in Russian, then across the line in English):"
         };
 
+        //Добавление маршрута
+        public static List<string> EnteringRouteName { get; set; } = new()
+        {
+            "Введи название маршрута(сначала на русском, потом через строчку на английском):",
+            "Enter the name of the route (first in Russian, then across the line in English):"
+        };
+
+        public static List<string> EnteringRouteDescription { get; set; } = new()
+        {
+            "Введи описание маршрута(сначала на русском, потом через строчку на английском):",
+            "Enter a description of the route (first in Russian, then through a line in English):"
+        };
+
+        public static List<string> EnteringRouteCost { get; set; } = new()
+        {
+            "Введи стоимость маршрута, если он бесплатный, то укажи 0:",
+            "Enter the cost of the route, if it is free, then specify 0:"
+        };
+
+        public static List<string> EnteringRouteTelephone { get; set; } = new()
+        {
+            "Введи номер телефона, где можно забронировать, если телефона нет, то напиши \"Нет\":",
+            "Enter the phone number where you can make a reservation, and if you don't have a phone number, write \"No\":"
+        };
+
+        public static List<string> EnteringRoutePlaces { get; set; } = new()
+        {
+            "Осталось выбрать места, которые есть в маршруте:",
+            "All that's left is to pick the places that are on the route:"
+        };
 
         //Добавление в план
         public static List<string> NoPlanForToday { get; set; } = new()
@@ -187,7 +223,7 @@ namespace YolaGuide.Messages
             "You don't have plans yet. It's time to make some!\n\nChoose where you want to go today:"
         };
 
-        public static List<string> EnteringPlanCategory { get; set; } = new()
+        public static List<string> EnteringPlanPlace { get; set; } = new()
         {
             "А теперь выберете место:",
             "Now pick a place:"
@@ -197,6 +233,32 @@ namespace YolaGuide.Messages
         {
             "И остаось выбрать адрес места:",
             "And the only thing left to do is pick an address for the place:"
+        };
+
+        // Удаление
+        public static List<string> DeletePlace { get; set; } = new()
+        {
+            "Выберете место, которое хотите удалить:",
+            "Select the place you want to delete:"
+        };
+
+        public static List<string> DeleteCategory { get; set; } = new()
+        {
+            "Выберете категорию, которую хотите удалить:",
+            "Select the category you want to delete:"
+        };
+
+
+        public static List<string> DeleteFact { get; set; } = new()
+        {
+            "Выберете факт, который хотите удалить:",
+            "Select the fact you want to delete:"
+        };
+
+        public static List<string> DeleteRoute { get; set; } = new()
+        {
+            "Выберете маршрут, который хотите удалить:",
+            "Select the route you want to delete:"
         };
 
         //Поиск
@@ -222,6 +284,19 @@ namespace YolaGuide.Messages
             return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
         }
 
+        public static string GetRouteInformation(Route route, Language language)
+        {
+            string[] name = route.Name.Split("\n\n");
+            string[] description = route.Description.Split("\n\n");
+            string cost = route.Cost == 0 ? "Бесплатно" : route.Cost.ToString();
+            string telephone = route.Telephone;
+
+            string[] messageCost = new[] { "Цена", "Cost" };
+            string[] messageTelephone = new[] { "Телефон", "Telephone" };
+
+            return string.Format("{0}\n{1}\n{2} {3}\n{4} {5}", name[(int)language], description[(int)language], messageCost[(int)language], cost[(int)language], messageTelephone[(int)language], telephone[(int)language]);
+        }
+
         public static string GetPlanInformation(User user)
         {
             var placesInPlan = user.Places;
@@ -230,7 +305,7 @@ namespace YolaGuide.Messages
             for(int i = 0; i < placesInPlan.Count; i++) 
             {
                 var name = placesInPlan[i].Name.Split("\n\n")[(int)user.Language];
-                var adress = placesInPlan[i].Adress;
+                var adress = placesInPlan[i].Adress.Split("\n\n")[(int)user.Language];
 
                 result += $"{i + 1}) {name}\n{adress}\n\n";
             }

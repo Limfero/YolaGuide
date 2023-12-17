@@ -15,7 +15,7 @@ namespace YolaGuide.Service
             _factRepository = factRepository;
         }
 
-        public async Task<IBaseResponse<Fact>> CreateFact(FactViewModel model)
+        public async Task<IBaseResponse<Fact>> CreateFactAsync(FactViewModel model)
         {
             try
             {
@@ -63,6 +63,51 @@ namespace YolaGuide.Service
                 return new BaseResponse<List<Fact>>()
                 {
                     Description = $"[FactService.GetAllFact] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public IBaseResponse<Fact> GetFactByName(string name)
+        {
+            try
+            {
+                var fact = _factRepository.GetFactByName(name);
+
+                return new BaseResponse<Fact>()
+                {
+                    Data = fact,
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<Fact>()
+                {
+                    Description = $"[FactService.GetFactByName] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public async Task<IBaseResponse<Fact>> RemoveFactAsync(Fact fact)
+        {
+            try
+            {
+                await _factRepository.RemoveAsync(fact);
+
+                return new BaseResponse<Fact>()
+                {
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<Fact>()
+                {
+                    Description = $"[FactService.RemoveFactAsync] - {ex.Message}",
                     StatusCode = StatusCode.InternalServerError
                 };
             }

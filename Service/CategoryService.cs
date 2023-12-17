@@ -89,7 +89,7 @@ namespace YolaGuide.Service
             }
         }
 
-        public async Task<IBaseResponse<Category>> CreateCategory(CategoryViewModel model)
+        public async Task<IBaseResponse<Category>> CreateCategoryAsync(CategoryViewModel model)
         {
             try
             {
@@ -99,11 +99,10 @@ namespace YolaGuide.Service
                     Subcategory = model.Subcategory
                 };
 
-                var response = await _categoryRepository.CreateAsync(category);
+                await _categoryRepository.CreateAsync(category);
 
                 return new BaseResponse<Category>()
                 {
-                    Data = response,
                     StatusCode = StatusCode.OK
                 };
             }
@@ -116,5 +115,26 @@ namespace YolaGuide.Service
                 };
             }   
         }
+
+        public async Task<IBaseResponse<Category>> RemoveCategoryAsync(Category category)
+        {
+            try
+            {
+                await _categoryRepository.RemoveAsync(category);
+
+                return new BaseResponse<Category>()
+                {
+                    StatusCode = StatusCode.OK
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<Category>()
+                {
+                    Description = $"[CategoryService.CreateCategory] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        } 
     }
 }

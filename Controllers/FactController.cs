@@ -24,17 +24,36 @@ namespace YolaGuide.Controllers
                 _newUserFact.Add(chatId, new());
         }
 
-        public static async Task CreateFactAsync(FactViewModel model)
+        public static async Task CreateAsync(FactViewModel model)
         {
-            var response = await _factService.CreateFact(model);
+            var response = await _factService.CreateFactAsync(model);
 
             if (response.StatusCode != StatusCode.OK)
                 throw new Exception(response.Description);
         }
 
+        public static async Task RemoveAsync(Fact fact)
+        {
+            var response = await _factService.RemoveFactAsync(fact);
+
+            if (response.StatusCode != StatusCode.OK)
+                throw new Exception(response.Description);
+        }
+
+
         public static List<Fact> GetAll()
         {
             var response = _factService.GetAllFact();
+
+            if (response.StatusCode == StatusCode.OK)
+                return response.Data;
+
+            throw new Exception(response.Description);
+        }
+
+        public static Fact GetFactByName(string name)
+        {
+            var response = _factService.GetFactByName(name);
 
             if (response.StatusCode == StatusCode.OK)
                 return response.Data;
@@ -47,10 +66,10 @@ namespace YolaGuide.Controllers
             var userInput = message.Text;
             var chatId = message.Chat.Id;
 
-            switch (user.StateAdd)
+            switch (user.Substate)
             {
-                case StateAdd.StartAddPlan:
-                    user.StateAdd = StateAdd.GettingFactName;
+                case Substate.StartAddPlan:
+                    user.Substate = Substate.GettingFactName;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -59,12 +78,12 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingFactName:
+                case Substate.GettingFactName:
                     if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserFact[chatId].Name = userInput;
-                    user.StateAdd = StateAdd.GettingPlaceDescription;
+                    user.Substate = Substate.GettingPlaceDescription;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -72,18 +91,18 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingFactDescription:
+                case Substate.GettingFactDescription:
                     if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserFact[chatId].Description = userInput;
-                    user.StateAdd = StateAdd.Start;
+                    user.Substate = Substate.Start;
 
-                    await CreateFactAsync(_newUserFact[chatId]);
+                    await CreateAsync(_newUserFact[chatId]);
                     _newUserFact[chatId] = new();
 
                     user.State = State.Start;
-                    user.StateAdd = StateAdd.Start;
+                    user.Substate = Substate.Start;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -94,6 +113,65 @@ namespace YolaGuide.Controllers
             }
 
             await UserController.UpdateUser(user);
+        }
+
+        public static async Task DeleteFactAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            var chatId = message.Chat.Id;
+
+            switch (user.Substate)
+            {
+                case Substate.StartDeleteFact:
+                    user.Substate = Substate.GettingFactToDelete;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.DeleteFact[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.GetAllFacts(user.Language, 1));
+                    break;
+
+                case Substate.GettingFactToDelete:
+                    var fact = GetFactByName(message.Text);
+
+                    if (fact != null)
+                    {
+                        await RemoveAsync(fact);
+
+                        user.State = State.Start;
+                        user.Substate = Substate.Start;
+
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.SuccessfullyDellete[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.Back(user.Language));
+
+                        break;
+                    }
+
+                    var userInputPageNumber = message.Text.Split(" ").ToList();
+
+                    if (userInputPageNumber[0] != "all")
+                    {
+                        await BaseController.ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    if (userInputPageNumber.Count != 2) userInputPageNumber.Add("1");
+
+                    if (int.TryParse(userInputPageNumber[1], out int page) && page > 0)
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.DeleteFact[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetAllFacts(user.Language, page));
+                    break;
+            }
         }
 
         public static Fact GetRandomFact()

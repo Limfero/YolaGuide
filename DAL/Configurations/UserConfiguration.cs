@@ -24,8 +24,8 @@ namespace YolaGuide.DAL.Configurations
                 .HasColumnName("state")
                 .IsRequired();
 
-            builder.Property(user => user.StateAdd)
-                .HasColumnName("state_add")
+            builder.Property(user => user.Substate)
+                .HasColumnName("substate")
                 .IsRequired();
 
             builder.Property(user => user.Language)

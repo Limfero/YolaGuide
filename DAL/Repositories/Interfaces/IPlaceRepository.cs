@@ -9,5 +9,7 @@ namespace YolaGuide.DAL.Repositories.Interfaces
         List<Place> GetPlacesByName(string name);
 
         Place GetPlaceById(int id);
+
+        List<Place> Search(string userInput);
     }
 }

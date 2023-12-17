@@ -24,7 +24,7 @@ namespace YolaGuide.Service
                     Id = model.Id,
                     Username = model.Username,
                     State = State.Start,
-                    StateAdd = StateAdd.Start,
+                    Substate = Substate.Start,
                 };
 
                 var response = await _userRepository.CreateAsync(user);

@@ -29,7 +29,8 @@ namespace YolaGuide.DAL.Repositories.Implimentation
 
         public Category GetCategoryByName(string name)
         {
-            return _dbContext.Set<Category>().FirstOrDefault(category => category.Name == name);
+            return _dbContext.Categories
+                .FirstOrDefault(category => category.Name.Contains(name));
         }
 
         public List<Category> GetAllSubcategories()

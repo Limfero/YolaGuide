@@ -1,9 +1,9 @@
-﻿namespace YolaGuide.Domain.Entity
-{
-    public class Route
-    {
-        public int Id { get; set; }
+﻿using YolaGuide.Domain.Entity;
 
+namespace YolaGuide.Domain.ViewModel
+{
+    public class RouteViewModel
+    {
         public string Name { get; set; }
 
         public string Description { get; set; }
@@ -13,7 +13,5 @@
         public string Telephone { get; set; }
 
         public List<Place> Places { get; set; } = new();
-
-        public List<User> Users { get; set; } = new();
     }
 }

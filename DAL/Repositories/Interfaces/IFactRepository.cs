@@ -4,5 +4,6 @@ namespace YolaGuide.DAL.Repositories.Interfaces
 {
     public interface IFactRepository : IBaseRepository<Fact>
     {
+        Fact GetFactByName(string name);
     }
 }

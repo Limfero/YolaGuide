@@ -140,17 +140,17 @@ namespace YolaGuide.Service
             {
                 return new BaseResponse<List<Place>>()
                 {
-                    Description = $"[PlaceService.GetPlaceByCategory] - {ex.Message}",
+                    Description = $"[PlaceService.GetAllPlace] - {ex.Message}",
                     StatusCode = StatusCode.InternalServerError
                 };
             }
         }
 
-        public IBaseResponse<List<Place>> GetPlaceToString(string userInput)
+        public IBaseResponse<List<Place>> SearchPlace(string userInput)
         {
             try
             {
-                var places = _placeRepository.GetAll().ToList();
+                var places = _placeRepository.Search(userInput);
 
                 return new BaseResponse<List<Place>>()
                 {
@@ -164,7 +164,30 @@ namespace YolaGuide.Service
             {
                 return new BaseResponse<List<Place>>()
                 {
-                    Description = $"[PlaceService.GetPlaceByCategory] - {ex.Message}",
+                    Description = $"[PlaceService.SearchPlace] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public async Task<IBaseResponse<Place>> RemovePlaceAsync(Place place)
+        {
+            try
+            {
+                await _placeRepository.RemoveAsync(place);
+
+                return new BaseResponse<Place>()
+                {
+                    Description = "Место удалено!",
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<Place>()
+                {
+                    Description = $"[PlaceService.RemovePlaceAsync] - {ex.Message}",
                     StatusCode = StatusCode.InternalServerError
                 };
             }

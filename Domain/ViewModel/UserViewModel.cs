@@ -10,6 +10,6 @@ namespace YolaGuide.Domain.ViewModel
 
         public State State { get; set; }
 
-        public StateAdd StateAdd { get; set; }
+        public Substate Substate { get; set; }
     }
 }

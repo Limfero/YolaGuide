@@ -10,7 +10,7 @@ namespace YolaGuide.Domain.Entity
 
         public State State { get; set; }
 
-        public StateAdd StateAdd { get; set; }
+        public Substate Substate { get; set; }
 
         public Language Language { get; set; }
 

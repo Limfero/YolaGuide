@@ -33,6 +33,14 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
+        public static async Task RemoveAsync(Place place)
+        {
+            var response = await _placeService.RemovePlaceAsync(place);
+
+            if (response.StatusCode != StatusCode.OK)
+                throw new Exception(response.Description);
+        }
+
         public static List<Place> GetPlacesByName(string name)
         {
             var response = _placeService.GetPlacesByName(name);
@@ -73,15 +81,25 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
+        public static List<Place> SearchPlace(string userInput)
+        {
+            var response = _placeService.SearchPlace(userInput);
+
+            if (response.StatusCode == StatusCode.OK)
+                return response.Data;
+
+            throw new Exception(response.Description);
+        }
+
         public static async Task AddPlaceAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var userInput = message.Text;
             var chatId = message.Chat.Id;
 
-            switch (user.StateAdd)
+            switch (user.Substate)
             {
-                case StateAdd.StartAddPlace:
-                    user.StateAdd = StateAdd.GettingPlaceName;
+                case Substate.StartAddPlace:
+                    user.Substate = Substate.GettingPlaceName;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -89,12 +107,12 @@ namespace YolaGuide.Controllers
                         text: Answer.EnteringPlaceName[(int)user.Language],
                         cancellationToken: cancellationToken);
                     break;
-                case StateAdd.GettingPlaceName:
+                case Substate.GettingPlaceName:
                     if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserPlaces[chatId].Name = userInput;
-                    user.StateAdd = StateAdd.GettingPlaceDescription;
+                    user.Substate = Substate.GettingPlaceDescription;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -102,12 +120,12 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingPlaceDescription:
+                case Substate.GettingPlaceDescription:
                     if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserPlaces[chatId].Description = userInput;
-                    user.StateAdd = StateAdd.GettingPlaceAdress;
+                    user.Substate = Substate.GettingPlaceAdress;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -115,9 +133,9 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingPlaceAdress:
+                case Substate.GettingPlaceAdress:
                     _newUserPlaces[chatId].Adress = userInput;
-                    user.StateAdd = StateAdd.GettingPlaceContactInformation;
+                    user.Substate = Substate.GettingPlaceContactInformation;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -125,12 +143,12 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingPlaceContactInformation:
+                case Substate.GettingPlaceContactInformation:
                     if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserPlaces[chatId].ContactInformation = userInput;
-                    user.StateAdd = StateAdd.GettingPlaceImage;
+                    user.Substate = Substate.GettingPlaceImage;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -138,7 +156,7 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingPlaceImage:
+                case Substate.GettingPlaceImage:
                     var fileId = message.Photo.Last().FileId;
                     var fileName = _newUserPlaces[chatId].Name.Split("\n\n")[(int)Language.Russian] + _newUserPlaces[chatId].Adress;
                     var destinationImagePath = Settings.DestinationImagePath + $"{fileName}Place.png";
@@ -152,7 +170,7 @@ namespace YolaGuide.Controllers
                     }
 
                     _newUserPlaces[chatId].Image = $"{_newUserPlaces[chatId].Name}Place.png";
-                    user.StateAdd = StateAdd.GettingPlaceYId;
+                    user.Substate = Substate.GettingPlaceYId;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                        chatId: chatId,
@@ -160,9 +178,9 @@ namespace YolaGuide.Controllers
                        cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingPlaceYId:
+                case Substate.GettingPlaceYId:
                     _newUserPlaces[chatId].YIdOrganization = long.Parse(userInput);
-                    user.StateAdd = StateAdd.GettingPlaceCoordinates;
+                    user.Substate = Substate.GettingPlaceCoordinates;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -170,11 +188,11 @@ namespace YolaGuide.Controllers
                         cancellationToken: cancellationToken);
                     break;
 
-                case StateAdd.GettingPlaceCoordinates:
+                case Substate.GettingPlaceCoordinates:
                     var listInput = userInput.Split(",");
 
                     _newUserPlaces[chatId].Coordinates = listInput[0].Trim() + "," + listInput[1].Trim();
-                    user.StateAdd = StateAdd.GettingPlaceCategories;
+                    user.Substate = Substate.GettingPlaceCategories;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -183,7 +201,7 @@ namespace YolaGuide.Controllers
                         replyMarkup: Keyboard.CategorySelection(_newUserPlaces[chatId].Categories.Count != 0 ? _newUserPlaces[chatId].Categories.Last() : null, user.Language));
                     break;
 
-                case StateAdd.GettingPlaceCategories:
+                case Substate.GettingPlaceCategories:
                     if (CategoryController.GetCategoryByName(userInput) == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);   
@@ -201,12 +219,12 @@ namespace YolaGuide.Controllers
                         replyMarkup: Keyboard.CategorySelection(_newUserPlaces[chatId].Categories.Last(), user.Language));
                     break;
 
-                case StateAdd.End:
+                case Substate.End:
                     await CreateAsync(_newUserPlaces[chatId]);
                     _newUserPlaces[chatId] = new();
 
                     user.State = State.Start;
-                    user.StateAdd = StateAdd.Start;
+                    user.Substate = Substate.Start;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -223,10 +241,10 @@ namespace YolaGuide.Controllers
         {
             var chatId = message.Chat.Id;
 
-            switch (user.StateAdd)
+            switch (user.Substate)
             {
-                case StateAdd.StartAddPlan:
-                    user.StateAdd = StateAdd.GettingPlanCategory;
+                case Substate.StartAddPlan:
+                    user.Substate = Substate.GettingPlanCategory;
 
                     if (user.Categories.Count == 0)
                     {
@@ -246,7 +264,7 @@ namespace YolaGuide.Controllers
                             replyMarkup: Keyboard.PlanCategorySelection(null, user.Language));
                     break;
 
-                case StateAdd.GettingPlanCategory:
+                case Substate.GettingPlanCategory:
                     var category = CategoryController.GetCategoryByName(message.Text);
 
                     if (CategoryController.GetCategoryByName(message.Text) == null)
@@ -258,13 +276,12 @@ namespace YolaGuide.Controllers
 
                     if (category.Subcategories.Count == 0)
                     {
-                        user.StateAdd = StateAdd.GettingPlanAdress;
-
+                        user.Substate = Substate.GettingPlanPlaceName;
 
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
-                            text: Answer.EnteringPlanCategory[(int)user.Language],
+                            text: Answer.EnteringPlanPlace[(int)user.Language],
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetNamePlaceByCategory(category, user.Language, 1));
                         break;
@@ -278,10 +295,10 @@ namespace YolaGuide.Controllers
                         replyMarkup: Keyboard.PlanCategorySelection(category, user.Language));
                     break;
 
-                case StateAdd.GettingPlanAdress:
+                case Substate.GettingPlanPlaceName:
                     if(GetPlacesByName(message.Text) != null)
                     {
-                        user.StateAdd = StateAdd.GettingPlanPlace;
+                        user.Substate = Substate.End;
 
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -306,33 +323,16 @@ namespace YolaGuide.Controllers
                     if (categoryPageNumber.Count != 2) categoryPageNumber.Add("1");
 
                     if (int.TryParse(categoryPageNumber[1], out int page) && page > 0)
-                    {
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
-                            text: Answer.EnteringPlanCategory[(int)user.Language],
+                            text: Answer.EnteringPlanPlace[(int)user.Language],
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetNamePlaceByCategory(category, user.Language, page));
-                    }
                     break;
 
-                case StateAdd.GettingPlanPlace:
+                case Substate.End:
                     var place = GetPlacesById(int.Parse(message.Text));
-
-                    if (GetPlacesById(int.Parse(message.Text)) == null)
-                    {
-                        await BaseController.ShowError(botClient, cancellationToken, user);
-
-                        break;
-                    }
-
-                    user.StateAdd = StateAdd.End;
-
-                    await GetPlaceCard(botClient, cancellationToken, place, user);
-                    break;
-
-                case StateAdd.End:
-                    place = GetPlacesById(int.Parse(message.Text));
 
                     if (GetPlacesById(int.Parse(message.Text)) == null)
                     {
@@ -343,9 +343,150 @@ namespace YolaGuide.Controllers
 
                     user.Places.Add(place);
                     user.State = State.Start;
-                    user.StateAdd = StateAdd.Start;
+                    user.Substate = Substate.Start;
 
                     await GetPlaceCard(botClient, cancellationToken, place, user);
+                    break;
+            }
+
+            await UserController.UpdateUser(user);
+        }
+
+        public static async Task Search(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            var userInput = message.Text;
+            var chatId = message.Chat.Id;
+
+            switch (user.Substate)
+            {
+                case Substate.StartSearch:
+                    user.Substate = Substate.GettingPlaceNameSearch;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.EnteringStringToSearch[(int)user.Language],
+                            cancellationToken: cancellationToken);
+                    break;
+                case Substate.GettingPlaceNameSearch:
+                    if (GetPlacesByName(message.Text) != null)
+                    {
+                        user.Substate = Substate.End;
+
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.EnteringPlanAdress[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetPlaceAddressesByName(message.Text, user.Language));
+                        break;
+                    }
+
+                    var userInputPageNumber = message.Text.Split(" ").ToList();
+                   
+                    if (userInputPageNumber.Count != 2) userInputPageNumber.Add("1");
+
+                    if (int.TryParse(userInputPageNumber[1], out int page) && page > 0)
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.EnteringPlanPlace[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetResultSearch(user.Language, userInputPageNumber[0], page));
+                    break;
+
+                case Substate.End:
+                    var place = GetPlacesById(int.Parse(message.Text));
+
+                    if (GetPlacesById(int.Parse(message.Text)) == null)
+                    {
+                        await BaseController.ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    user.Places.Add(place);
+                    user.State = State.Start;
+                    user.Substate = Substate.Start;
+
+                    await GetPlaceCard(botClient, cancellationToken, place, user);
+                    break;
+            }
+
+            await UserController.UpdateUser(user);
+        }
+
+        public static async Task DeletePlaceAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            var chatId = message.Chat.Id;
+
+            switch (user.Substate)
+            {
+                case Substate.StartDeletePlace:
+                    user.Substate = Substate.GettingPlaceToDelete;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.DeletePlace[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.GetAllPlace(user.Language, 1));
+                    break;
+
+                case Substate.GettingPlaceToDelete:
+                    if (GetPlacesByName(message.Text) != null)
+                    {
+                        user.Substate = Substate.End;
+
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.EnteringPlanAdress[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetPlaceAddressesByName(message.Text, user.Language));
+
+                        break;
+                    }
+
+                    var userInputPageNumber = message.Text.Split(" ").ToList();
+
+                    if (userInputPageNumber[0] != "all")
+                    {
+                        await BaseController.ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    if (userInputPageNumber.Count != 2) userInputPageNumber.Add("1");
+
+                    if (int.TryParse(userInputPageNumber[1], out int page) && page > 0)
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.DeletePlace[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetAllPlace(user.Language, page));
+                    break;
+
+                case Substate.End:
+                    if (GetPlacesById(int.Parse(message.Text)) == null)
+                    {
+                        await BaseController.ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    user.State = State.Start;
+                    user.Substate = Substate.Start;
+
+                    await RemoveAsync(GetPlacesById(int.Parse(message.Text)));
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.SuccessfullyDellete[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.Back(user.Language));
                     break;
             }
 
@@ -376,31 +517,6 @@ namespace YolaGuide.Controllers
                     cancellationToken: cancellationToken,
                     replyMarkup: Keyboard.GetPlaceCard(user.Language, place));
             }
-        }
-
-        public static async Task Search(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
-        {
-            var userInput = message.Text;
-            var chatId = message.Chat.Id;
-
-            switch (user.StateAdd)
-            {
-                case StateAdd.StartSearch:
-                    user.StateAdd = StateAdd.GettingStringToSearch;
-
-                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
-                            messageId: Settings.LastBotMsg[chatId].MessageId,
-                            chatId: chatId,
-                            text: Answer.EnteringStringToSearch[(int)user.Language],
-                            cancellationToken: cancellationToken);
-                    break;
-                case StateAdd.GettingStringToSearch:
-
-
-                    break;
-            }
-
-            await UserController.UpdateUser(user);
         }
     }
 }

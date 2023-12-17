@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using YolaGuide.DAL.Repositories.Implementation;
 using YolaGuide.DAL.Repositories.Interfaces;
 using YolaGuide.Domain.Entity;
+using YolaGuide.Domain.Enums;
 
 namespace YolaGuide.DAL.Repositories.Implimentation
 {
@@ -28,7 +29,7 @@ namespace YolaGuide.DAL.Repositories.Implimentation
                 .Include(place => place.Categories)
                 .Include(place => place.Routes)
                 .AsSplitQuery()
-                .Where(place => place.Name == name)
+                .Where(place => place.Name.Contains(name))
                 .ToList();
         }
 

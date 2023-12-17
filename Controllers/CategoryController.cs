@@ -23,8 +23,8 @@ namespace YolaGuide.Controllers
                 _newUserCategory.Add(chatId, new());
         }
 
-        public static Category GetCategoryByName(string name) 
-        { 
+        public static Category GetCategoryByName(string name)
+        {
             var response = _categoryService.GetCategoryByName(name);
 
             if (response.StatusCode == StatusCode.OK)
@@ -43,9 +43,17 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static async Task CreateCategotyAsync(CategoryViewModel model)
+        public static async Task CreateAsync(CategoryViewModel model)
         {
-            var response = await _categoryService.CreateCategory(model);
+            var response = await _categoryService.CreateCategoryAsync(model);
+
+            if (response.StatusCode != StatusCode.OK)
+                throw new Exception(response.Description);
+        }
+
+        public static async Task RemoveAsync(Category category)
+        {
+            var response = await _categoryService.RemoveCategoryAsync(category);
 
             if (response.StatusCode != StatusCode.OK)
                 throw new Exception(response.Description);
@@ -56,10 +64,10 @@ namespace YolaGuide.Controllers
             var userInput = message.Text;
             var chatId = message.Chat.Id;
 
-            switch (user.StateAdd)
+            switch (user.Substate)
             {
-                case StateAdd.StartAddCategory:
-                    user.StateAdd = StateAdd.GettingCategoryName;
+                case Substate.StartAddCategory:
+                    user.Substate = Substate.GettingCategoryName;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -67,12 +75,12 @@ namespace YolaGuide.Controllers
                         text: Answer.EnteringCategoryName[(int)user.Language],
                         cancellationToken: cancellationToken);
                     break;
-                case StateAdd.GettingCategoryName:
+                case Substate.GettingCategoryName:
                     if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
                         break;
 
                     _newUserCategory[chatId].Name = userInput;
-                    user.StateAdd = StateAdd.GettingCategorySubcategory;
+                    user.Substate = Substate.GettingCategorySubcategory;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -81,7 +89,7 @@ namespace YolaGuide.Controllers
                         replyMarkup: Keyboard.CategorySelection(null, user.Language));
                     break;
 
-                case StateAdd.GettingCategorySubcategory:
+                case Substate.GettingCategorySubcategory:
                     if (GetCategoryByName(message.Text) == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
@@ -97,13 +105,13 @@ namespace YolaGuide.Controllers
                         replyMarkup: Keyboard.CategorySelection(GetCategoryByName(message.Text), user.Language));
                     break;
 
-                case StateAdd.End:
+                case Substate.End:
                     _newUserCategory[chatId].Subcategory = GetCategoryByName(message.Text);
 
-                    await CreateCategotyAsync(_newUserCategory[chatId]);
+                    await CreateAsync(_newUserCategory[chatId]);
 
                     user.State = State.Start;
-                    user.StateAdd = StateAdd.Start;
+                    user.Substate = Substate.Start;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -120,12 +128,12 @@ namespace YolaGuide.Controllers
         {
             var chatId = message.Chat.Id;
 
-            switch (user.StateAdd)
+            switch (user.Substate)
             {
-                case StateAdd.StartRefiningPreferences:
-                    user.StateAdd = StateAdd.GettingPreferencesCategories;
+                case Substate.StartRefiningPreferences:
+                    user.Substate = Substate.GettingPreferencesCategories;
 
-                    if(user == null)
+                    if (user == null)
                     {
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -143,7 +151,7 @@ namespace YolaGuide.Controllers
                            cancellationToken: cancellationToken,
                            replyMarkup: Keyboard.PreferenceSelection(null, user.Language));
                     break;
-                case StateAdd.GettingPreferencesCategories:
+                case Substate.GettingPreferencesCategories:
                     var category = GetCategoryByName(message.Text);
 
                     if (GetCategoryByName(message.Text) == null)
@@ -166,13 +174,66 @@ namespace YolaGuide.Controllers
                            cancellationToken: cancellationToken,
                            replyMarkup: Keyboard.PreferenceSelection(category, user.Language));
                     break;
-                case StateAdd.End:
+                case Substate.End:
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                            messageId: Settings.LastBotMsg[chatId].MessageId,
                            chatId: chatId,
                            text: Answer.SuccessfullySetUpPreferences[(int)user.Language],
                            cancellationToken: cancellationToken,
                            replyMarkup: Keyboard.SuccessfullyCustomizedPreferences(user.Language));
+                    break;
+            }
+
+            await UserController.UpdateUser(user);
+        }
+
+        public static async Task DeleteCategoryAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            var userInput = message.Text;
+            var chatId = message.Chat.Id;
+
+            switch (user.Substate)
+            {
+                case Substate.StartDeleteCategory:
+                    user.Substate = Substate.GettingCategoryToDelete;
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.DeleteCategory[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.CategorySelection(null, user.Language));
+                    break;
+
+                case Substate.GettingCategoryToDelete:
+                    var category = GetCategoryByName(message.Text);
+
+                    if (GetCategoryByName(message.Text) == null)
+                    {
+                        await BaseController.ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    if (category.Subcategories.Count == 0)
+                    {
+                        await RemoveAsync(category);
+
+                        user.State = State.Start;
+                        user.Substate = Substate.Start;
+
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.SuccessfullyDellete[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.Back(user.Language));
+                    }
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.DeleteCategory[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.CategorySelection(category, user.Language));
                     break;
             }
 
