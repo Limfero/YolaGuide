@@ -36,16 +36,22 @@ namespace YolaGuide.Messages
             "Where are we going, Master?"
         };
 
-        public static List<string> WhatToAdd { get; set; } = new()
+        public static List<string> ObjectSelection { get; set; } = new()
         {
-            "Что будем добавлять?",
-            "What do we add?"
+            "Над каким объектом будем проводить операцию?",
+            "What facility will we be operating on?"
         };
 
         public static List<string> ClarificationOfPreferences { get; set; } = new()
         {
             "Выберете категории, которые вам интересны:",
             "Choose the categories you are interested in:"
+        };
+
+        public static List<string> Added { get; set; } = new()
+        {
+            "Добавлено!",
+            "Added!"
         };
 
         public static List<string> SuccessfullyAdded { get; set; } = new()
@@ -231,7 +237,7 @@ namespace YolaGuide.Messages
 
         public static List<string> EnteringPlanAdress { get; set; } = new()
         {
-            "И остаось выбрать адрес места:",
+            "И осталось выбрать адрес места:",
             "And the only thing left to do is pick an address for the place:"
         };
 

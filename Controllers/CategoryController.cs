@@ -12,7 +12,7 @@ namespace YolaGuide.Controllers
 {
     public static class CategoryController
     {
-        private static readonly CategoryService _categoryService = new(new CategoryRepository(new ApplicationDbContext(new())));
+        private static readonly CategoryService _categoryService = new(new CategoryRepository(new ApplicationDbContext()));
         private static readonly Dictionary<long, CategoryViewModel> _newUserCategory = new();
 
         public static void AddNewPairInDictionary(long chatId)
@@ -26,6 +26,16 @@ namespace YolaGuide.Controllers
         public static Category GetCategoryByName(string name)
         {
             var response = _categoryService.GetCategoryByName(name);
+
+            if (response.StatusCode == StatusCode.OK)
+                return response.Data;
+
+            throw new Exception(response.Description);
+        }
+
+        public static Category GetCategoryById(int id)
+        {
+            var response = _categoryService.GetCategoryById(id);
 
             if (response.StatusCode == StatusCode.OK)
                 return response.Data;
@@ -90,7 +100,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingCategorySubcategory:
-                    if (GetCategoryByName(message.Text) == null)
+                    if (GetCategoryById(int.Parse(message.Text)) == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 
@@ -102,16 +112,25 @@ namespace YolaGuide.Controllers
                         chatId: chatId,
                         text: Answer.EnteringCategorySubcategory[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.CategorySelection(GetCategoryByName(message.Text), user.Language));
+                        replyMarkup: Keyboard.CategorySelection(GetCategoryById(int.Parse(message.Text)), user.Language));
                     break;
 
                 case Substate.End:
-                    _newUserCategory[chatId].Subcategory = GetCategoryByName(message.Text);
+                    Category category = null;
+
+                    if(int.TryParse(message.Text.Split("\n")[1], out int id))
+                        category = GetCategoryById(id);
+
+                    _newUserCategory[chatId].Subcategory = category;
 
                     await CreateAsync(_newUserCategory[chatId]);
 
                     user.State = State.Start;
                     user.Substate = Substate.Start;
+
+                    await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -152,9 +171,9 @@ namespace YolaGuide.Controllers
                            replyMarkup: Keyboard.PreferenceSelection(null, user.Language));
                     break;
                 case Substate.GettingPreferencesCategories:
-                    var category = GetCategoryByName(message.Text);
+                    var category = GetCategoryById(int.Parse(message.Text));
 
-                    if (GetCategoryByName(message.Text) == null)
+                    if (category == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 
@@ -197,7 +216,8 @@ namespace YolaGuide.Controllers
                 case Substate.StartDeleteCategory:
                     user.Substate = Substate.GettingCategoryToDelete;
 
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.DeleteCategory[(int)user.Language],
                         cancellationToken: cancellationToken,
@@ -205,9 +225,9 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingCategoryToDelete:
-                    var category = GetCategoryByName(message.Text);
+                    var category = GetCategoryById(int.Parse(message.Text));
 
-                    if (GetCategoryByName(message.Text) == null)
+                    if (category == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 

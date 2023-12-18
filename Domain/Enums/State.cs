@@ -16,5 +16,6 @@
         AddPlaceToPlan = 19,
         Search = 20,
         GetRotes = 21,
+        GetPlan = 22,
     }
 }

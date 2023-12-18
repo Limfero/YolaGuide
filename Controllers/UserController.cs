@@ -8,7 +8,7 @@ namespace YolaGuide.Controllers
 {
     public static class UserController
     {
-        private static readonly UserService _userService = new(new UserRepository(new ApplicationDbContext(new())));
+        private static readonly UserService _userService = new(new UserRepository(new ApplicationDbContext()));
 
         public static async Task CreateUser(UserViewModel model)
         {

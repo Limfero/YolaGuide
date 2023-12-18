@@ -13,6 +13,20 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         {
         }
 
+        public override async Task<Place> CreateAsync(Place entity)
+        {
+            var categories = entity.Categories;
+            entity.Categories = new();
+
+            _dbContext.Plases.Add(entity);
+            await _dbContext.SaveChangesAsync();
+
+            entity.Categories.AddRange(categories);
+            await _dbContext.SaveChangesAsync();
+
+            return entity;
+        }
+
         public List<Place> GetPlacesByCategory(Category category)
         {
             return _dbContext.Plases
@@ -26,10 +40,10 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         public List<Place> GetPlacesByName(string name)
         {
             return _dbContext.Plases
+                .Where(place => place.Name == name)
                 .Include(place => place.Categories)
                 .Include(place => place.Routes)
                 .AsSplitQuery()
-                .Where(place => place.Name.Contains(name))
                 .ToList();
         }
 
@@ -45,10 +59,10 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         public List<Place> Search(string userInput)
         {
             return _dbContext.Plases
+                .FromSql($"SELECT * FROM [place] WHERE name LIKE '%{userInput}%'")
                 .Include(place => place.Categories)
                 .Include(place => place.Routes)
                 .AsSplitQuery()
-                .Where(place => EF.Functions.FreeText(place.Name, userInput))
                 .ToList();
         }
     }

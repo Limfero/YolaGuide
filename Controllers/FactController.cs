@@ -12,7 +12,7 @@ namespace YolaGuide.Controllers
 {
     public class FactController
     {
-        private static readonly FactService _factService = new(new FactReposutory(new ApplicationDbContext(new())));
+        private static readonly FactService _factService = new(new FactReposutory(new ApplicationDbContext()));
         private static readonly Dictionary<long, FactViewModel> _newUserFact = new();
         private static readonly Random _random = new Random();
 

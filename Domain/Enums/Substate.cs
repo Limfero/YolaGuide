@@ -40,13 +40,14 @@
         StartRefiningPreferences = 51,
 
         //Добавление места в план на сегодня
-        GettingPlanCategory = 60,
         StartAddPlan = 61,
+        GettingPlanCategory = 60,
         GettingPlanPlaceName = 62,
+        GettingPlanPlace = 63,
 
         //Поиск
-        GettingPlaceNameSearch = 70,
-        StartSearch = 71,
+        StartSearch = 70,
+        GettingPlaceNameSearch = 71,
 
         //Удаление места
         GettingPlaceToDelete = 80,
@@ -68,5 +69,9 @@
         GettingAllRoute = 120,
         StartGetAllRoute = 121,
         GettingAllPlaceInRoute = 122,
+
+        //План
+        GettingPlaceInPlan = 130,
+        StartGetPlan = 131,
     }
 }

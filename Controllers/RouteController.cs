@@ -13,7 +13,7 @@ namespace YolaGuide.Controllers
 {
     public class RouteController
     {
-        private static readonly RouteService _routeService = new(new RouteRepository(new ApplicationDbContext(new())));
+        private static readonly RouteService _routeService = new(new RouteRepository(new ApplicationDbContext()));
         private static readonly Dictionary<long, RouteViewModel> _newUserRoute = new();
 
         public static void AddNewPairInDictionary(long chatId)

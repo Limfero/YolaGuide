@@ -49,9 +49,6 @@ namespace YolaGuide
                         var chatId = update.Message.Chat.Id;
                         var user = UserController.GetUserById(chatId);
 
-                        if (user == null)
-                            await UserController.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = update.Message.Chat.Username });
-
                         switch (message.Type)
                         {
                             case MessageType.Text:
@@ -217,14 +214,14 @@ namespace YolaGuide
                         PlaceController.AddNewPairInDictionary(chatId);
 
                         await PlaceController.AddPlaceInPlanAsync(botClient, message, cancellationToken, user);
+                        break;
                     }
 
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
-                        chatId: chatId,
-                        text: Answer.GetPlanInformation(user),
-                        cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.Back(user.Language));
+                    user.State = State.GetPlan;
+                    user.Substate = Substate.StartGetPlan;
+                    await UserController.UpdateUser(user);
 
+                    await PlaceController.GetPlan(botClient, message, cancellationToken, user);
                     break;
 
                 case "готовые маршруты":
@@ -233,6 +230,7 @@ namespace YolaGuide
 
                     user.State = State.GetRotes;
                     user.Substate = Substate.StartGetAllRoute;
+                    await UserController.UpdateUser(user);
 
                     await RouteController.GetAllRoutes(botClient, message, cancellationToken, user);
                     break;
@@ -285,16 +283,27 @@ namespace YolaGuide
             var callbackQuery = update.CallbackQuery;
             var chatId = callbackQuery.Message.Chat.Id;
             await botClient.AnswerCallbackQueryAsync(callbackQuery.Id, cancellationToken: cancellationToken);
-            var message = new Message() { Text = callbackQuery.Data, Chat = callbackQuery.Message.Chat };
+            var message = new Message() { Text = callbackQuery.Data, Chat = callbackQuery.Message.Chat, MediaGroupId = callbackQuery.Id };
 
-            switch (callbackQuery.Data)
+            switch (callbackQuery.Data.Split("\n")[0])
             {
                 case "English":
                 case "Русский":
+                    if (user == null)
+                    {
+                        await UserController.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = callbackQuery.From.Username });
+                        user = UserController.GetUserById(chatId);
+
+                        user.State = State.ClarificationOfPreferences;
+                        user.Substate = Substate.StartRefiningPreferences;
+
+                        await CategoryController.ClarificationOfPreferencesAsync(botClient, message, cancellationToken, user);
+                    }
+
                     await ChangeLanguage(user, callbackQuery.Data);
                     goto case "Главное меню";
 
-                case "Уточнение пердпочтений":
+                case "Уточнение предпочтений":
                     user.State = State.ClarificationOfPreferences;
                     user.Substate = Substate.StartRefiningPreferences;
 
@@ -311,15 +320,6 @@ namespace YolaGuide
                     break;
 
                 case "Главное меню":
-                    if (user == null)
-                    {
-                        user.State = State.ClarificationOfPreferences;
-                        user.Substate = Substate.StartRefiningPreferences;
-
-                        await CategoryController.ClarificationOfPreferencesAsync(botClient, message, cancellationToken, user);
-                        break;
-                    }
-
                     await ResettingUserStates(user);
 
                     await botClient.DeleteMessageAsync(
@@ -335,9 +335,10 @@ namespace YolaGuide
 
                 case "Добавить":
                 case "Удалить":
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
-                        text: Answer.WhatToAdd[(int)user.Language],
+                        text: Answer.ObjectSelection[(int)user.Language],
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.ChoosingWhatToAdd(user.Language, callbackQuery.Data));
                     break;
@@ -435,7 +436,7 @@ namespace YolaGuide
 
                 default:
                     if (user.Substate != Substate.End && callbackQuery.Data != "Назад")
-                        await botClient.AnswerCallbackQueryAsync(callbackQuery.Id, "Добавлено!");
+                        await botClient.AnswerCallbackQueryAsync(callbackQuery.Id, Answer.Added[(int)user.Language]);
 
                     await ChangeState(botClient, message, cancellationToken, user);
                     break;
@@ -489,6 +490,7 @@ namespace YolaGuide
                 Substate.StartDeleteCategory,
                 Substate.StartDeleteFact,
                 Substate.StartDeleteRoute,
+                Substate.StartGetPlan,
             };
 
             if (startState.Contains(user.Substate))
@@ -561,6 +563,10 @@ namespace YolaGuide
 
                 case State.Search:
                     await PlaceController.Search(botClient, message, cancellationToken, user);
+                    break;
+
+                case State.GetPlan:
+                    await PlaceController.GetPlan(botClient, message, cancellationToken, user);
                     break;
             }
         }

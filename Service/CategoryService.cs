@@ -89,6 +89,29 @@ namespace YolaGuide.Service
             }
         }
 
+        public IBaseResponse<Category> GetCategoryById(int id)
+        {
+            try
+            {
+                var response = _categoryRepository.GetCategoryById(id);
+
+                return new BaseResponse<Category>()
+                {
+                    Data = response,
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<Category>()
+                {
+                    Description = $"[CategoryService.GetCategoryByName] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
         public async Task<IBaseResponse<Category>> CreateCategoryAsync(CategoryViewModel model)
         {
             try

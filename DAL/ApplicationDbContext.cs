@@ -12,7 +12,7 @@ namespace YolaGuide.DAL
         public DbSet<Fact> Facts { get; set; }
         public DbSet<Route> Routs { get; set; }
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        public ApplicationDbContext()
         {
             Database.EnsureCreated();
         }

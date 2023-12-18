@@ -13,32 +13,59 @@ namespace YolaGuide.DAL.Repositories.Implimentation
 
         public List<Category> GetFirstCategories()
         {
-            return _dbContext.Categories
+            var categoties = _dbContext.Categories
                 .Include(category => category.Subcategory)
-                .AsSplitQuery()
+                .Include(category => category.Subcategories)
+                .Include(category => category.Places)
+                .AsSingleQuery();
+
+            return categoties
                 .Where(category => category.Subcategory == null).ToList();
         } 
 
         public List<Category> GetSubcategories(Category mainCategory)
         {
-            return _dbContext.Categories
+            var categoties = _dbContext.Categories
                 .Include(category => category.Subcategory)
-                .AsSplitQuery()
+                .Include(category => category.Subcategories)
+                .Include(category => category.Places)
+                .AsSingleQuery();
+
+            return categoties
                 .Where(category => category.Subcategory == mainCategory).ToList();
         }
 
         public Category GetCategoryByName(string name)
         {
             return _dbContext.Categories
+                .Include(category => category.Subcategory)
+                .Include(category => category.Subcategories)
+                .Include(category => category.Places)
+                .AsSingleQuery()
                 .FirstOrDefault(category => category.Name.Contains(name));
+        }
+
+        public Category GetCategoryById(int id)
+        {
+            return _dbContext.Categories
+                .Include(category => category.Subcategory)
+                .Include(category => category.Subcategories)
+                .Include(category => category.Places)
+                .AsSingleQuery()
+                .FirstOrDefault(category => category.Id == id);
         }
 
         public List<Category> GetAllSubcategories()
         {
-            return _dbContext.Categories
+            var categoties = _dbContext.Categories
+                .Include(category => category.Subcategory)
                 .Include(category => category.Subcategories)
-                .AsSplitQuery()
-                .Where(category => category.Subcategories.Count == 0).ToList();
+                .Include(category => category.Places)
+                .AsSingleQuery();
+
+            return categoties
+                .Where(category => category.Subcategories.Count == 0)
+                .ToList();
         }
     }
 }

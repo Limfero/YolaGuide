@@ -13,7 +13,7 @@ namespace YolaGuide.Controllers
 {
     public static class PlaceController
     {
-        private static readonly PlaceService _placeService = new(new PlaceRepository(new ApplicationDbContext(new())));
+        private static readonly PlaceService _placeService = new(new PlaceRepository(new ApplicationDbContext()));
         private static readonly Dictionary<long, PlaceViewModel> _newUserPlaces = new();
         private static readonly Random _random = new();
 
@@ -51,6 +51,16 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
+        public static List<Place> SearchPlace(string userInput)
+        {
+            var response = _placeService.Search(userInput);
+
+            if (response.StatusCode == StatusCode.OK)
+                return response.Data;
+
+            throw new Exception(response.Description);
+        }
+
         public static List<Place> GetPlacesByCategory(Category category)
         {
             var response = _placeService.GetPlacesByCategory(category);
@@ -74,16 +84,6 @@ namespace YolaGuide.Controllers
         public static List<Place> GetAll()
         {
             var response = _placeService.GetAllPlace();
-
-            if (response.StatusCode == StatusCode.OK)
-                return response.Data;
-
-            throw new Exception(response.Description);
-        }
-
-        public static List<Place> SearchPlace(string userInput)
-        {
-            var response = _placeService.SearchPlace(userInput);
 
             if (response.StatusCode == StatusCode.OK)
                 return response.Data;
@@ -158,7 +158,7 @@ namespace YolaGuide.Controllers
 
                 case Substate.GettingPlaceImage:
                     var fileId = message.Photo.Last().FileId;
-                    var fileName = _newUserPlaces[chatId].Name.Split("\n\n")[(int)Language.Russian] + _newUserPlaces[chatId].Adress;
+                    var fileName = _newUserPlaces[chatId].Name.Split("\n\n")[(int)Language.Russian] + _newUserPlaces[chatId].Adress.Split("\n\n")[(int)Language.Russian];
                     var destinationImagePath = Settings.DestinationImagePath + $"{fileName}Place.png";
 
                     await using (Stream fileStream = System.IO.File.Create(new string(destinationImagePath)))
@@ -169,7 +169,7 @@ namespace YolaGuide.Controllers
                             cancellationToken: cancellationToken);
                     }
 
-                    _newUserPlaces[chatId].Image = $"{_newUserPlaces[chatId].Name}Place.png";
+                    _newUserPlaces[chatId].Image = $"{fileName}Place.png";
                     user.Substate = Substate.GettingPlaceYId;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
@@ -198,18 +198,18 @@ namespace YolaGuide.Controllers
                         chatId: chatId,
                         text: Answer.EnteringPlaceCategories[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.CategorySelection(_newUserPlaces[chatId].Categories.Count != 0 ? _newUserPlaces[chatId].Categories.Last() : null, user.Language));
+                        replyMarkup: Keyboard.CategorySelection(null, user.Language));
                     break;
 
                 case Substate.GettingPlaceCategories:
-                    if (CategoryController.GetCategoryByName(userInput) == null)
+                    if (CategoryController.GetCategoryById(int.Parse(userInput)) == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);   
 
                         break;
                     }
 
-                    _newUserPlaces[chatId].Categories.Add(CategoryController.GetCategoryByName(userInput));
+                    _newUserPlaces[chatId].Categories.Add(CategoryController.GetCategoryById(int.Parse(userInput)));
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -225,6 +225,10 @@ namespace YolaGuide.Controllers
 
                     user.State = State.Start;
                     user.Substate = Substate.Start;
+
+                    await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -244,10 +248,10 @@ namespace YolaGuide.Controllers
             switch (user.Substate)
             {
                 case Substate.StartAddPlan:
-                    user.Substate = Substate.GettingPlanCategory;
-
                     if (user.Categories.Count == 0)
                     {
+                        user.Substate = Substate.GettingPlanCategory;
+
                         Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                                 chatId: chatId,
                                 text: Answer.NoPlanForToday[(int)user.Language],
@@ -257,17 +261,19 @@ namespace YolaGuide.Controllers
                         break;
                     }
 
+                    user.Substate = Substate.GettingPlanCategory;
+
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                             chatId: chatId,
-                            text: Answer.WhatToAdd[(int)user.Language],
+                            text: Answer.ObjectSelection[(int)user.Language],
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.PlanCategorySelection(null, user.Language));
                     break;
 
                 case Substate.GettingPlanCategory:
-                    var category = CategoryController.GetCategoryByName(message.Text);
+                    var category = CategoryController.GetCategoryById(int.Parse(message.Text));
 
-                    if (CategoryController.GetCategoryByName(message.Text) == null)
+                    if (category == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 
@@ -298,7 +304,7 @@ namespace YolaGuide.Controllers
                 case Substate.GettingPlanPlaceName:
                     if(GetPlacesByName(message.Text) != null)
                     {
-                        user.Substate = Substate.End;
+                        user.Substate = Substate.GettingPlanPlace;
 
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -331,22 +337,76 @@ namespace YolaGuide.Controllers
                             replyMarkup: Keyboard.GetNamePlaceByCategory(category, user.Language, page));
                     break;
 
-                case Substate.End:
+                case Substate.GettingPlanPlace:
                     var place = GetPlacesById(int.Parse(message.Text));
 
-                    if (GetPlacesById(int.Parse(message.Text)) == null)
+                    if (place == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 
                         break;
                     }
 
-                    user.Places.Add(place);
-                    user.State = State.Start;
-                    user.Substate = Substate.Start;
+                    user.Substate = Substate.End;
 
                     await GetPlaceCard(botClient, cancellationToken, place, user);
                     break;
+
+                case Substate.End:
+                    place = GetPlacesById(int.Parse(message.Text));
+                    place.Categories = new();
+
+                    user.Places.Add(place);
+
+                    await UserController.UpdateUser(user);
+
+                    await botClient.AnswerCallbackQueryAsync(message.MediaGroupId, Answer.Added[(int)user.Language]);
+                    break;
+            }
+
+            await UserController.UpdateUser(user);
+        }
+
+        public static async Task GetPlan(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        {
+            var chatId = message.Chat.Id;
+
+            switch (user.Substate)
+            {
+                case Substate.StartGetPlan:
+                    user.Substate = Substate.GettingPlaceInPlan;
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: Answer.GetPlanInformation(user),
+                                cancellationToken: cancellationToken,
+                                replyMarkup: Keyboard.GetPlanCard(user.Language, user));
+                    break;
+
+                case Substate.GettingPlaceInPlan:
+                    user.Substate = Substate.End;
+
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.PlacesInPlan[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.GetPlaceInList(user.Language, user.Places));
+                    break;
+
+                case Substate.End:
+                    var place = GetPlacesById(int.Parse(message.Text));
+
+                    if (place == null)
+                    {
+                        await BaseController.ShowError(botClient, cancellationToken, user);
+
+                        break;
+                    }
+
+                    await GetPlaceCard(botClient, cancellationToken, place, user);
+                    break;
+
             }
 
             await UserController.UpdateUser(user);
@@ -362,23 +422,22 @@ namespace YolaGuide.Controllers
                 case Substate.StartSearch:
                     user.Substate = Substate.GettingPlaceNameSearch;
 
-                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
-                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                             chatId: chatId,
                             text: Answer.EnteringStringToSearch[(int)user.Language],
                             cancellationToken: cancellationToken);
                     break;
                 case Substate.GettingPlaceNameSearch:
-                    if (GetPlacesByName(message.Text) != null)
+                    var places = SearchPlace(message.Text);
+                    if (places.Count != 0)
                     {
                         user.Substate = Substate.End;
 
-                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
-                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                        Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                             chatId: chatId,
                             text: Answer.EnteringPlanAdress[(int)user.Language],
                             cancellationToken: cancellationToken,
-                            replyMarkup: Keyboard.GetPlaceAddressesByName(message.Text, user.Language));
+                            replyMarkup: Keyboard.GetPlaceAddressesByName(places[0].Name, user.Language));
                         break;
                     }
 
@@ -405,11 +464,11 @@ namespace YolaGuide.Controllers
                         break;
                     }
 
+                    await botClient.AnswerCallbackQueryAsync(message.MessageId.ToString(), Answer.Added[(int)user.Language]);
+
                     user.Places.Add(place);
                     user.State = State.Start;
                     user.Substate = Substate.Start;
-
-                    await GetPlaceCard(botClient, cancellationToken, place, user);
                     break;
             }
 
@@ -508,14 +567,18 @@ namespace YolaGuide.Controllers
 
         public async static Task GetPlaceCard(ITelegramBotClient botClient, CancellationToken cancellationToken, Place place, Domain.Entity.User user)
         {
+            await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+
             using (var fileStream = new FileStream(Settings.DestinationImagePath + place.Image, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                await botClient.SendPhotoAsync(
+                Settings.LastBotMsg[user.Id] = await botClient.SendPhotoAsync(
                     chatId: user.Id,
                     photo: InputFile.FromStream(fileStream),
                     caption: Answer.GetPlaceInformation(place, user.Language),
                     cancellationToken: cancellationToken,
-                    replyMarkup: Keyboard.GetPlaceCard(user.Language, place));
+                    replyMarkup: Keyboard.GetPlaceCard(user.Language, place, user));
             }
         }
     }

@@ -10,6 +10,8 @@ namespace YolaGuide.DAL.Configurations
         {
             builder.ToTable("place");
 
+            builder.HasIndex(place => place.Name);
+
             builder.HasKey(place => place.Id)
                 .HasName("id_place");
 

@@ -11,5 +11,7 @@ namespace YolaGuide.DAL.Repositories.Interfaces
         Category GetCategoryByName(string name);
 
         List<Category> GetAllSubcategories();
+
+        Category GetCategoryById(int id);
     }
 }
