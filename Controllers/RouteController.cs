@@ -67,7 +67,7 @@ namespace YolaGuide.Controllers
 
             switch (user.Substate)
             {
-                case Substate.StartAddRoute:
+                case Substate.Start:
                     user.Substate = Substate.GettingRouteName;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
@@ -217,7 +217,7 @@ namespace YolaGuide.Controllers
 
             switch (user.Substate)
             {
-                case Substate.StartDeleteRoute:
+                case Substate.Start:
                     user.Substate = Substate.GettingPlaceToDelete;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
@@ -276,8 +276,8 @@ namespace YolaGuide.Controllers
 
             switch (user.Substate)
             {
-                case Substate.StartGetAllRoute:
-                    user.Substate = Substate.StartGetAllRoute;
+                case Substate.Start:
+                    user.Substate = Substate.GettingAllRoute;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,

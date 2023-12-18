@@ -76,7 +76,7 @@ namespace YolaGuide.Controllers
 
             switch (user.Substate)
             {
-                case Substate.StartAddCategory:
+                case Substate.Start:
                     user.Substate = Substate.GettingCategoryName;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
@@ -100,9 +100,19 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingCategorySubcategory:
-                    if (GetCategoryById(int.Parse(message.Text)) == null)
+                    Category category = null;
+
+                    if (int.TryParse(message.Text, out int id))
+                        category = GetCategoryById(id);
+
+                    if (category == null)
                     {
-                        await BaseController.ShowError(botClient, cancellationToken, user);
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                           messageId: Settings.LastBotMsg[chatId].MessageId,
+                           chatId: chatId,
+                           text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           cancellationToken: cancellationToken,
+                           replyMarkup: Keyboard.PreferenceSelection(null, user.Language, user));
 
                         break;
                     }
@@ -116,9 +126,9 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.End:
-                    Category category = null;
+                    category = null;
 
-                    if(int.TryParse(message.Text.Split("\n")[1], out int id))
+                    if(int.TryParse(message.Text.Split("\n")[1], out id))
                         category = GetCategoryById(id);
 
                     _newUserCategory[chatId].Subcategory = category;
@@ -149,7 +159,7 @@ namespace YolaGuide.Controllers
 
             switch (user.Substate)
             {
-                case Substate.StartRefiningPreferences:
+                case Substate.Start:
                     user.Substate = Substate.GettingPreferencesCategories;
 
                     if (user == null)
@@ -168,20 +178,30 @@ namespace YolaGuide.Controllers
                            chatId: chatId,
                            text: Answer.ClarificationOfPreferences[(int)user.Language],
                            cancellationToken: cancellationToken,
-                           replyMarkup: Keyboard.PreferenceSelection(null, user.Language));
+                           replyMarkup: Keyboard.PreferenceSelection(null, user.Language, user));
                     break;
                 case Substate.GettingPreferencesCategories:
-                    var category = GetCategoryById(int.Parse(message.Text));
+                    Category category = null;
+
+                    if(int.TryParse(message.Text, out int id))
+                        category = GetCategoryById(id);
 
                     if (category == null)
                     {
-                        await BaseController.ShowError(botClient, cancellationToken, user);
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                           messageId: Settings.LastBotMsg[chatId].MessageId,
+                           chatId: chatId,
+                           text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           cancellationToken: cancellationToken,
+                           replyMarkup: Keyboard.PreferenceSelection(null, user.Language, user));
 
                         break;
                     }
 
                     if (category.Subcategories.Count == 0)
                     {
+                        category.Subcategory = null;
+
                         user.Categories.Add(category);
                         category = null;
                     }
@@ -191,7 +211,7 @@ namespace YolaGuide.Controllers
                            chatId: chatId,
                            text: Answer.ClarificationOfPreferences[(int)user.Language],
                            cancellationToken: cancellationToken,
-                           replyMarkup: Keyboard.PreferenceSelection(category, user.Language));
+                           replyMarkup: Keyboard.PreferenceSelection(category, user.Language, user));
                     break;
                 case Substate.End:
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
@@ -213,7 +233,7 @@ namespace YolaGuide.Controllers
 
             switch (user.Substate)
             {
-                case Substate.StartDeleteCategory:
+                case Substate.Start:
                     user.Substate = Substate.GettingCategoryToDelete;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(

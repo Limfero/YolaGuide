@@ -106,18 +106,18 @@ namespace YolaGuide.Messages
             });
         }
 
-        public static InlineKeyboardMarkup SelectToDeleteOrAdd(Language language)
+        public static InlineKeyboardMarkup SelectToDeleteOrAdd(Language language, string whatDeleteOrAdd)
         {
             return new(new List<InlineKeyboardButton[]>()
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить", "Add" }[(int)language], "Добавить")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить", "Add" }[(int)language], $"Добавить\n{whatDeleteOrAdd}")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Удалить", "Delete" }[(int)language], "Удалить"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Удалить", "Delete" }[(int)language], $"Удалить\n{whatDeleteOrAdd}"),
                 },
 
                 new InlineKeyboardButton[]
@@ -194,7 +194,7 @@ namespace YolaGuide.Messages
                 }
             });
 
-            if (user.Places.Contains(place))
+            if (user.Places.FirstOrDefault(p => p.Id == place.Id) == null)
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
                     InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить в план на сегодня", "Add to today's plan" }[(int)language], place.Id.ToString()),
@@ -205,34 +205,38 @@ namespace YolaGuide.Messages
 
         public static InlineKeyboardMarkup GetPlanCard(Language language, Domain.Entity.User user)
         {
-            return GetRouteButton(user.Places, language);
+            var keyboard = GetRouteButton(user.Places, language);
+
+            keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Редактировать план", "Edit the plan" }[(int)language], "Редактировать план"),
+            }));
+
+            keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData(new List<string>() { "Очистить план", "Contact information" }[(int)language], "Очистить план"),
+            }));
+
+            keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+            {
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Главное меню"),
+            }));
+
+            return keyboard;
         }
 
         public static InlineKeyboardMarkup GetRouteCard(Language language, Route route)
         {
-            return GetRouteButton(route.Places, language);
-        }
+            var keyboard = GetRouteButton(route.Places, language);
 
-        public static InlineKeyboardMarkup GetPlan(Language language, Domain.Entity.User user)
-        {
-            var coordinats = "";
-            foreach (var place in user.Places)
-                coordinats += place.Coordinates + "~";
-
-            return new(new List<InlineKeyboardButton[]>()
+            keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                new InlineKeyboardButton[]
-                {
-                    InlineKeyboardButton.WithUrl(new List<string>(){ "Показать на карте маршрут", "Show the route on the map" }[(int)language], string.Format(Settings.URLYandexRoute, coordinats[0..(coordinats.Length - 1)])),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Редактировать план", "Edit the plan" }[(int)language], "Редактировать план"),
-                },
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Главное меню"),
+            }));
 
-                new InlineKeyboardButton[]
-                {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Главное меню"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
-                }
-            });
+            return keyboard;
         }
 
         public static InlineKeyboardMarkup CategorySelection(Category category, Language language)
@@ -252,17 +256,38 @@ namespace YolaGuide.Messages
         {
             var keyboard = GetKeyboardSubcategories(category, language);
 
-            keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
-            {
-                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
-            }));
+            if(category != null)
+                keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+                {
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Главное меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад")
+                }));
+            else
+                keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+                {
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Главное меню"),
+                }));
 
             return keyboard;
         }
 
-        public static InlineKeyboardMarkup PreferenceSelection(Category category, Language language)
+        public static InlineKeyboardMarkup PreferenceSelection(Category category, Language language, Domain.Entity.User user)
         {
-            var keyboard = GetKeyboardSubcategories(category, language);
+            var subcategories = CategoryController.GetCategories(category).ToList();
+            var keyboard = new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>());
+
+            foreach (var subcategory in subcategories)
+            {
+                if (user.Categories.FirstOrDefault(category => category.Id == subcategory.Id) == null)
+                {
+                    var listNamesInDiffLanguages = subcategory.Name.Split("\n\n");
+
+                    keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+                    {
+                        InlineKeyboardButton.WithCallbackData(new List<string>() { listNamesInDiffLanguages[(int)Language.Russian], listNamesInDiffLanguages[(int)Language.English] }[(int)language], subcategory.Id.ToString())
+                    }));
+                }
+            }
 
             if (category == null)
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
@@ -323,7 +348,7 @@ namespace YolaGuide.Messages
 
         public static InlineKeyboardMarkup GetResultSearch(Language language, string userInput, int numberPage)
         {
-            var places = PlaceController.GetPlacesByName(userInput).Select(place => place.Name).Distinct().ToList();
+            var places = PlaceController.SearchPlace(userInput).Select(place => place.Name).Distinct().ToList();
 
             return GetNavigationButton(places, numberPage, userInput, language);
         }
@@ -369,7 +394,7 @@ namespace YolaGuide.Messages
 
         private static InlineKeyboardMarkup GetNavigationButton(List<string> names, int numberPage, string callBack, Language language)
         {
-            int countPage = (int)Math.Ceiling((double)names.Count / Settings.NumberObjectsPerPage);
+            int countPage = (int)Math.Ceiling((double)names.Count / Settings.NumberObjectsPerPage) == 0 ? 1 : (int)Math.Ceiling((double)names.Count / Settings.NumberObjectsPerPage);
             int startPosition = (numberPage - 1) * Settings.NumberObjectsPerPage;
             int endPosition = numberPage * Settings.NumberObjectsPerPage > names.Count ? names.Count : numberPage * Settings.NumberObjectsPerPage;
 
@@ -414,19 +439,13 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Показать места в плане", "Show the locations in the plan" }[(int)language],  places[0..(places.Length - 1)]),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Показать места", "Show the place" }[(int)language],  places[0..(places.Length - 1)]),
                 },
 
                 new InlineKeyboardButton[]
                 {
                     InlineKeyboardButton.WithUrl(new List<string>(){ "Показать на карте", "Show on map" }[(int)language], string.Format(Settings.URLYandexRoute, coordinats[0..(coordinats.Length - 1)])),
                 },
-
-                new InlineKeyboardButton[]
-                {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Главное меню"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
-                }
             });
         }
     }

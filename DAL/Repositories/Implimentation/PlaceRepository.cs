@@ -58,12 +58,19 @@ namespace YolaGuide.DAL.Repositories.Implimentation
 
         public List<Place> Search(string userInput)
         {
-            return _dbContext.Plases
-                .FromSql($"SELECT * FROM [place] WHERE name LIKE '%{userInput}%'")
+            var places = _dbContext.Plases
                 .Include(place => place.Categories)
                 .Include(place => place.Routes)
                 .AsSplitQuery()
                 .ToList();
+
+            List<Place> search = new();
+
+            foreach (var place in places)
+                if (place.Name.ToLower().Contains(userInput.ToLower().Trim()))
+                    search.Add(place);
+
+            return search;
         }
     }
 }

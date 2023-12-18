@@ -223,10 +223,10 @@ namespace YolaGuide.Messages
         };
 
         //Добавление в план
-        public static List<string> NoPlanForToday { get; set; } = new()
+        public static List<string> MakingPlan { get; set; } = new()
         {
-            "У вас пока нет планов. Пора составить!\n\nВыбирайте куда хотите отправиться сегодня:",
-            "You don't have plans yet. It's time to make some!\n\nChoose where you want to go today:"
+            "Выбирайте куда хотите отправиться сегодня:",
+            "Choose where you want to go today:"
         };
 
         public static List<string> EnteringPlanPlace { get; set; } = new()

@@ -7,71 +7,62 @@
 
         //Добавление места
         GettingPlaceName = 10,
-        StartAddPlace = 11,
-        GettingPlaceDescription = 12,
-        GettingPlaceImage = 13,
-        GettingPlaceContactInformation = 14,
-        GettingPlaceAdress = 15,
-        GettingPlaceYId = 16,
-        GettingPlaceCoordinates = 17,
-        GettingPlaceCategories = 18,
+        GettingPlaceDescription = 11,
+        GettingPlaceImage = 12,
+        GettingPlaceContactInformation = 13,
+        GettingPlaceAdress = 14,
+        GettingPlaceYId = 15,
+        GettingPlaceCoordinates = 16,
+        GettingPlaceCategories = 17,
 
         //Добавление категории
         GettingCategoryName = 20,
-        StartAddCategory = 21,
-        GettingCategorySubcategory = 22,
+        GettingCategorySubcategory = 21,
 
         //Добавление факта
         GettingFactName = 30,
-        StartAddFact = 31,
-        GettingFactDescription = 32,
+        GettingFactDescription = 31,
 
         //Добавление маршрута
         GettingRouteName = 40,
-        StartAddRoute = 41,
-        GettingRouteDescription = 42,
-        GettingRouteCost = 43,
-        GettingRouteTelephone = 44,
-        GettingRoutePlaces = 45,
-        GettingRoutePlaceAdress = 46,
+        GettingRouteDescription = 41,
+        GettingRouteCost = 42,
+        GettingRouteTelephone = 43,
+        GettingRoutePlaces = 44,
+        GettingRoutePlaceAdress = 45,
 
         //Уточнение пердпочтений
         GettingPreferencesCategories = 50,
-        StartRefiningPreferences = 51,
 
         //Добавление места в план на сегодня
-        StartAddPlan = 61,
         GettingPlanCategory = 60,
-        GettingPlanPlaceName = 62,
-        GettingPlanPlace = 63,
+        GettingPlanPlaceName = 61,
+        GettingPlanPlace = 62,
 
         //Поиск
-        StartSearch = 70,
-        GettingPlaceNameSearch = 71,
+        GettingPlaceNameSearch = 70,
+        GettingPlaceAdressSearch = 71,
 
         //Удаление места
         GettingPlaceToDelete = 80,
-        StartDeletePlace = 81,
 
         //Удаление категории
         GettingCategoryToDelete = 90,
-        StartDeleteCategory = 91,
 
         //Удаление факта
         GettingFactToDelete = 100,
-        StartDeleteFact = 101,
 
         //Удаление маршрута
         GettingRouteToDelete = 110,
-        StartDeleteRoute = 111,
 
         //Все маршруты
         GettingAllRoute = 120,
-        StartGetAllRoute = 121,
-        GettingAllPlaceInRoute = 122,
+        GettingAllPlaceInRoute = 121,
 
         //План
         GettingPlaceInPlan = 130,
-        StartGetPlan = 131,
+
+        //Удаление места из плана
+        GettingPlaceInPlanToDelete = 140,
     }
 }

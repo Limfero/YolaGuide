@@ -17,5 +17,6 @@
         Search = 20,
         GetRotes = 21,
         GetPlan = 22,
+        DeletePlaceInPlan = 23,
     }
 }

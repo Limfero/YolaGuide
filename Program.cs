@@ -159,7 +159,7 @@ namespace YolaGuide
                         chatId: chatId,
                         text: Answer.SelectAdmin[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.SelectToDeleteOrAdd(user.Language));
+                        replyMarkup: Keyboard.SelectToDeleteOrAdd(user.Language, "admin"));
                     break;
 
                 case "дай факт!":
@@ -208,7 +208,7 @@ namespace YolaGuide
                     if (user.Places.Count == 0)
                     {
                         user.State = State.AddPlaceToPlan;
-                        user.Substate = Substate.StartAddPlan;
+                        user.Substate = Substate.Start;
                         await UserController.UpdateUser(user);
 
                         PlaceController.AddNewPairInDictionary(chatId);
@@ -218,7 +218,7 @@ namespace YolaGuide
                     }
 
                     user.State = State.GetPlan;
-                    user.Substate = Substate.StartGetPlan;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     await PlaceController.GetPlan(botClient, message, cancellationToken, user);
@@ -229,7 +229,7 @@ namespace YolaGuide
                     await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
 
                     user.State = State.GetRotes;
-                    user.Substate = Substate.StartGetAllRoute;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     await RouteController.GetAllRoutes(botClient, message, cancellationToken, user);
@@ -240,7 +240,7 @@ namespace YolaGuide
                     await CloseReplyMenu(botClient, chatId, cancellationToken, user.Language);
 
                     user.State = State.Search;
-                    user.Substate = Substate.StartSearch;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     await PlaceController.Search(botClient, message, cancellationToken, user);
@@ -295,7 +295,7 @@ namespace YolaGuide
                         user = UserController.GetUserById(chatId);
 
                         user.State = State.ClarificationOfPreferences;
-                        user.Substate = Substate.StartRefiningPreferences;
+                        user.Substate = Substate.Start;
 
                         await CategoryController.ClarificationOfPreferencesAsync(botClient, message, cancellationToken, user);
                     }
@@ -305,7 +305,7 @@ namespace YolaGuide
 
                 case "Уточнение предпочтений":
                     user.State = State.ClarificationOfPreferences;
-                    user.Substate = Substate.StartRefiningPreferences;
+                    user.Substate = Substate.Start;
 
                     await CategoryController.ClarificationOfPreferencesAsync(botClient, message, cancellationToken, user);
                     break;
@@ -335,6 +335,12 @@ namespace YolaGuide
 
                 case "Добавить":
                 case "Удалить":
+                    if (callbackQuery.Data.Split("\n")[1] == "plan")
+                        if (callbackQuery.Data.Split("\n")[0] == "Добавить")
+                            goto case "Добавить в план";
+                        else
+                            goto case "Удалить из плана";
+
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
@@ -345,7 +351,7 @@ namespace YolaGuide
 
                 case "Добавить место":
                     user.State = State.AddPlace;
-                    user.Substate = Substate.StartAddPlace;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     PlaceController.AddNewPairInDictionary(chatId);
@@ -355,7 +361,7 @@ namespace YolaGuide
 
                 case "Добавить категорию":
                     user.State = State.AddCategory;
-                    user.Substate = Substate.StartAddCategory;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     CategoryController.AddNewPairInDictionary(chatId);
@@ -365,7 +371,7 @@ namespace YolaGuide
 
                 case "Добавить факт":
                     user.State = State.AddFact;
-                    user.Substate = Substate.StartAddPlan;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     FactController.AddNewPairInDictionary(chatId);
@@ -375,7 +381,7 @@ namespace YolaGuide
 
                 case "Добавить маршрут":
                     user.State = State.AddRoute;
-                    user.Substate = Substate.StartAddRoute;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     RouteController.AddNewPairInDictionary(chatId);
@@ -385,7 +391,7 @@ namespace YolaGuide
 
                 case "Удалить место":
                     user.State = State.DeletePlace;
-                    user.Substate = Substate.StartDeletePlace;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     await PlaceController.DeletePlaceAsync(botClient, message, cancellationToken, user);
@@ -393,7 +399,7 @@ namespace YolaGuide
 
                 case "Удалить категорию":
                     user.State = State.DeleteCategory;
-                    user.Substate = Substate.StartDeleteCategory;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     await CategoryController.DeleteCategoryAsync(botClient, message, cancellationToken, user);
@@ -401,7 +407,7 @@ namespace YolaGuide
 
                 case "Удалить факт":
                     user.State = State.DeleteFact;
-                    user.Substate = Substate.StartAddPlan;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     await RouteController.DeleteRouteAsync(botClient, message, cancellationToken, user);
@@ -409,21 +415,44 @@ namespace YolaGuide
 
                 case "Удалить маршрут":
                     user.State = State.DeleteRoute;
-                    user.Substate = Substate.StartDeleteRoute;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     await PlaceController.DeletePlaceAsync(botClient, message, cancellationToken, user);
                     break;
 
                 case "Редактировать план":
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
+                        chatId: chatId,
+                        text: Answer.SelectAdmin[(int)user.Language],
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.SelectToDeleteOrAdd(user.Language, "plan"));
+                    break;
+
+                case "Добавить в план":
                     user.State = State.AddPlaceToPlan;
-                    user.Substate = Substate.StartAddPlan;
+                    user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
                     PlaceController.AddNewPairInDictionary(chatId);
 
                     await PlaceController.AddPlaceInPlanAsync(botClient, message, cancellationToken, user);
                     break;
+
+                case "Удалить из плана":
+                    user.State = State.DeletePlaceInPlan;
+                    user.Substate = Substate.Start;
+                    await UserController.UpdateUser(user);
+
+                    await PlaceController.DeletePlaceInPlan(botClient, message, cancellationToken, user);
+                    break;
+
+                case "Очистить план":
+                    user.Places = new();
+
+                    await ResettingUserStates(user);
+                    goto default;
 
                 case "Я все выбрал!":
                     user.Substate = Substate.End;
@@ -477,23 +506,7 @@ namespace YolaGuide
 
         private static async Task BackState(Domain.Entity.User user)
         {
-            List<Substate> startState = new() { 
-                Substate.Start, 
-                Substate.StartAddPlace, 
-                Substate.StartAddCategory, 
-                Substate.StartAddFact,
-                Substate.StartAddRoute,
-                Substate.StartRefiningPreferences,
-                Substate.StartAddPlan,
-                Substate.StartSearch,
-                Substate.StartDeletePlace, 
-                Substate.StartDeleteCategory,
-                Substate.StartDeleteFact,
-                Substate.StartDeleteRoute,
-                Substate.StartGetPlan,
-            };
-
-            if (startState.Contains(user.Substate))
+            if (user.Substate == Substate.Start)
             {
                 await ResettingUserStates(user);
 
@@ -501,6 +514,9 @@ namespace YolaGuide
             }
 
             user.Substate--;
+
+            if (!Enum.IsDefined(user.Substate))
+                user.Substate = Substate.Start;
 
             await UserController.UpdateUser(user);
         }
@@ -567,6 +583,10 @@ namespace YolaGuide
 
                 case State.GetPlan:
                     await PlaceController.GetPlan(botClient, message, cancellationToken, user);
+                    break;
+
+                case State.DeletePlaceInPlan:
+                    await PlaceController.DeletePlaceInPlan(botClient, message, cancellationToken, user);
                     break;
             }
         }

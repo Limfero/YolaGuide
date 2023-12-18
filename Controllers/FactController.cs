@@ -68,7 +68,7 @@ namespace YolaGuide.Controllers
 
             switch (user.Substate)
             {
-                case Substate.StartAddPlan:
+                case Substate.Start:
                     user.Substate = Substate.GettingFactName;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
@@ -121,7 +121,7 @@ namespace YolaGuide.Controllers
 
             switch (user.Substate)
             {
-                case Substate.StartDeleteFact:
+                case Substate.Start:
                     user.Substate = Substate.GettingFactToDelete;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
