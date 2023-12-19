@@ -247,6 +247,12 @@ namespace YolaGuide.Messages
         };
 
         //Добавление в план
+        public static List<string> PlanIsEmpty { get; set; } = new()
+        {
+            "Ваш план пуст! Давайте выберем куда отправиться сегодня?:",
+            "Your plan is empty! Let's pick a place to go today, shall we?"
+        };
+
         public static List<string> MakingPlan { get; set; } = new()
         {
             "Выбирайте куда хотите отправиться сегодня:",

@@ -22,11 +22,24 @@ namespace YolaGuide.DAL.Repositories.Implimentation
             }
 
             entity.Categories = new();
+            entity.Users = new();
 
             _dbContext.Plases.Add(entity);
             await _dbContext.SaveChangesAsync();
 
             entity.Categories.AddRange(categories);
+            await _dbContext.SaveChangesAsync();
+
+            return entity;
+        }
+
+        public override async Task<Place> RemoveAsync(Place entity)
+        {
+            entity.Users = new();
+            entity.Routes = new();
+            entity.Categories = new();
+
+            _dbContext.Remove(entity);
             await _dbContext.SaveChangesAsync();
 
             return entity;

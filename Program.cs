@@ -304,7 +304,7 @@ namespace YolaGuide
                 case "Русский":
                     if (user == null)
                     {
-                        await UserController.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = callbackQuery.From.Username });
+                        await UserController.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = callbackQuery.From.Username == null ? "Anonimys" : callbackQuery.From.Username });
                         user = UserController.GetUserById(chatId);
 
                         user.State = State.ClarificationOfPreferences;

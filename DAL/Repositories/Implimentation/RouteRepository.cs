@@ -15,12 +15,16 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         {
             var places = entity.Places;
             entity.Places = new();
+            entity.Users = new();
 
             _dbContext.Routes.Add(entity);
             await _dbContext.SaveChangesAsync();
 
             foreach (var place in places)
-                 place.Categories = null;
+            {
+                place.Categories = null;
+                place.Users = null;
+            }
 
             entity.Places.AddRange(places);
             await _dbContext.SaveChangesAsync();
@@ -44,7 +48,7 @@ namespace YolaGuide.DAL.Repositories.Implimentation
                 .AsSplitQuery()
                 .ToList();
 
-            return routes.FirstOrDefault(route => route.Name == name);
+            return routes.FirstOrDefault(route => route.Name.Contains(name));
         }
 
         public Route GetRouteById(int id)

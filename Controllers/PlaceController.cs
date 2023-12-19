@@ -246,12 +246,15 @@ namespace YolaGuide.Controllers
                 case Substate.Start:
                     user.Substate = Substate.GettingPlanCategory;
 
+
                     if (message.Text == "Назад" || message.Text == "Добавить\nplan")
                         goto case Substate.GettingPlanCategory;
 
+                    var answer = user.Places.Count == 0 ? Answer.PlanIsEmpty : Answer.MakingPlan;
+
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                             chatId: chatId,
-                            text: Answer.MakingPlan[(int)user.Language],
+                            text: answer[(int)user.Language],
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.PlanCategorySelection(null, user.Language));
                     break;
