@@ -1,9 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using YolaGuide.DAL.Repositories.Implementation;
 using YolaGuide.DAL.Repositories.Interfaces;
 using YolaGuide.Domain.Entity;
-using YolaGuide.Domain.Enums;
 
 namespace YolaGuide.DAL.Repositories.Implimentation
 {
@@ -16,6 +14,13 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         public override async Task<Place> CreateAsync(Place entity)
         {
             var categories = entity.Categories;
+            foreach (var category in categories)
+            {
+                category.Subcategories = new();
+                category.Places = new();
+                category.Subcategory = null;
+            }
+
             entity.Categories = new();
 
             _dbContext.Plases.Add(entity);
@@ -40,7 +45,7 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         public List<Place> GetPlacesByName(string name)
         {
             return _dbContext.Plases
-                .Where(place => place.Name == name)
+                .Where(place => place.Name.Contains(name))
                 .Include(place => place.Categories)
                 .Include(place => place.Routes)
                 .AsSplitQuery()

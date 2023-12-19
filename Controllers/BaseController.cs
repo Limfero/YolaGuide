@@ -9,7 +9,7 @@ namespace YolaGuide.Controllers
     {
         internal static async Task<bool> IsNotCorrectInput(string userInput, ITelegramBotClient botClient, CancellationToken cancellationToken, Domain.Entity.User user)
         {
-            if (userInput.Split("\n\n").Length == (int)Language.English + 1) return false;
+            if (userInput.Split("\n\n\n").Length == (int)Language.English + 1) return false;
 
             Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
                 chatId: user.Id,

@@ -148,6 +148,16 @@ namespace YolaGuide.Controllers
                         break;
 
                     _newUserPlaces[chatId].ContactInformation = userInput;
+                    user.Substate = Substate.GettingPlaceYId;
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.EnteringPlaceYId[(int)user.Language],
+                        cancellationToken: cancellationToken);
+                    break;
+
+                case Substate.GettingPlaceYId:
+                    _newUserPlaces[chatId].YIdOrganization = long.Parse(userInput);
                     user.Substate = Substate.GettingPlaceImage;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
@@ -158,7 +168,7 @@ namespace YolaGuide.Controllers
 
                 case Substate.GettingPlaceImage:
                     var fileId = message.Photo.Last().FileId;
-                    var fileName = _newUserPlaces[chatId].Name.Split("\n\n")[(int)Language.Russian] + _newUserPlaces[chatId].Adress.Split("\n\n")[(int)Language.Russian];
+                    var fileName = _newUserPlaces[chatId].YIdOrganization;
                     var destinationImagePath = Settings.DestinationImagePath + $"{fileName}Place.png";
 
                     await using (Stream fileStream = System.IO.File.Create(new string(destinationImagePath)))
@@ -170,22 +180,12 @@ namespace YolaGuide.Controllers
                     }
 
                     _newUserPlaces[chatId].Image = $"{fileName}Place.png";
-                    user.Substate = Substate.GettingPlaceYId;
-
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
-                       chatId: chatId,
-                       text: Answer.EnteringPlaceYId[(int)user.Language],
-                       cancellationToken: cancellationToken);
-                    break;
-
-                case Substate.GettingPlaceYId:
-                    _newUserPlaces[chatId].YIdOrganization = long.Parse(userInput);
                     user.Substate = Substate.GettingPlaceCoordinates;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
-                        chatId: chatId,
-                        text: Answer.EnteringPlaceCoordinates[(int)user.Language],
-                        cancellationToken: cancellationToken);
+                       chatId: chatId,
+                       text: Answer.EnteringPlaceCoordinates[(int)user.Language],
+                       cancellationToken: cancellationToken);
                     break;
 
                 case Substate.GettingPlaceCoordinates:
@@ -208,8 +208,10 @@ namespace YolaGuide.Controllers
 
                         break;
                     }
+                    var category = CategoryController.GetCategoryById(int.Parse(userInput));
 
-                    _newUserPlaces[chatId].Categories.Add(CategoryController.GetCategoryById(int.Parse(userInput)));
+                    if (_newUserPlaces[chatId].Categories.FirstOrDefault(c => c.Id == category.Id) == null)
+                        _newUserPlaces[chatId].Categories.Add(category);
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -223,18 +225,12 @@ namespace YolaGuide.Controllers
                     await CreateAsync(_newUserPlaces[chatId]);
                     _newUserPlaces[chatId] = new();
 
-                    user.State = State.Start;
-                    user.Substate = Substate.Start;
-
-                    await botClient.DeleteMessageAsync(
-                        chatId: user.Id,
-                        messageId: Settings.LastBotMsg[user.Id].MessageId);
-
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.SuccessfullyAdded[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetStart(chatId, user.Language));
+                        replyMarkup: Keyboard.SuccessfullyAdded(user.Language));
                     break;
             };
 
@@ -250,7 +246,7 @@ namespace YolaGuide.Controllers
                 case Substate.Start:
                     user.Substate = Substate.GettingPlanCategory;
 
-                    if (message.Text == "Назад")
+                    if (message.Text == "Назад" || message.Text == "Добавить\nplan")
                         goto case Substate.GettingPlanCategory;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
@@ -302,7 +298,7 @@ namespace YolaGuide.Controllers
                 case Substate.GettingPlanPlaceName:
                     if(GetPlacesByName(message.Text) != null)
                     {
-                        user.Substate = Substate.GettingPlanPlace;
+                        user.Substate = Substate.End;
 
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -335,7 +331,7 @@ namespace YolaGuide.Controllers
                             replyMarkup: Keyboard.GetNamePlaceByCategory(category, user.Language, page));
                     break;
 
-                case Substate.GettingPlanPlace:
+                case Substate.End:
                     var place = GetPlacesById(int.Parse(message.Text));
 
                     if (place == null)
@@ -345,21 +341,7 @@ namespace YolaGuide.Controllers
                         break;
                     }
 
-                    user.Substate = Substate.End;
-
-                    await GetPlaceCard(botClient, cancellationToken, place, user);
-                    break;
-
-                case Substate.End:
-                    place = GetPlacesById(int.Parse(message.Text));
-                    place.Categories = new();
-
-                    user.Places.Add(place);
-
-                    await UserController.UpdateUser(user);
-
-                    await botClient.AnswerCallbackQueryAsync(message.MediaGroupId, Answer.Added[(int)user.Language]);
-                    await GetPlaceCard(botClient, cancellationToken, place, user);
+                    await GetPlaceCard(botClient, cancellationToken, place, user, message);
                     break;
             }
 
@@ -403,7 +385,7 @@ namespace YolaGuide.Controllers
                         break;
                     }
 
-                    await GetPlaceCard(botClient, cancellationToken, place, user);
+                    await GetPlaceCard(botClient, cancellationToken, place, user, message);
                     break;
 
             }
@@ -600,9 +582,6 @@ namespace YolaGuide.Controllers
                         break;
                     }
 
-                    user.State = State.Start;
-                    user.Substate = Substate.Start;
-
                     await RemoveAsync(GetPlacesById(int.Parse(message.Text)));
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
@@ -633,21 +612,169 @@ namespace YolaGuide.Controllers
                 return null;
         }
 
-        public async static Task GetPlaceCard(ITelegramBotClient botClient, CancellationToken cancellationToken, Place place, Domain.Entity.User user)
+        public async static Task GetPlaceCard(ITelegramBotClient botClient, CancellationToken cancellationToken, Place place, Domain.Entity.User user, Message message)
         {
-            await botClient.DeleteMessageAsync(
+            switch (user.Substate)
+            {
+                case Substate.End:
+                    await botClient.DeleteMessageAsync(
                         chatId: user.Id,
                         messageId: Settings.LastBotMsg[user.Id].MessageId);
 
-            using (var fileStream = new FileStream(Settings.DestinationImagePath + place.Image, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                Settings.LastBotMsg[user.Id] = await botClient.SendPhotoAsync(
-                    chatId: user.Id,
-                    photo: InputFile.FromStream(fileStream),
-                    caption: Answer.GetPlaceInformation(place, user.Language),
-                    cancellationToken: cancellationToken,
-                    replyMarkup: Keyboard.GetPlaceCard(user.Language, place, user));
+                    using (var fileStream = new FileStream(Settings.DestinationImagePath + place.Image, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        Settings.LastBotMsg[user.Id] = await botClient.SendPhotoAsync(
+                            chatId: user.Id,
+                            photo: InputFile.FromStream(fileStream),
+                            caption: Answer.GetPlaceInformation(place, user.Language),
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetPlaceCard(user.Language, place, user));
+                    }
+                    break;
+
+                case Substate.GettingPlaceInformation:
+                    await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+
+                    Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
+                            chatId: user.Id,
+                            text: place.ContactInformation.Split("\n\n\n")[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.Back(user.Language, place.Id.ToString()));
+                    break;
+
+                case Substate.GettingSimilarPlaces:
+                    user.Substate = Substate.GettingPlaceNavigation;
+
+                    await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+
+                    Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
+                            chatId: user.Id,
+                            text: Answer.GetSimilarPlaces[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GettingPlacesInListAndButtonNavigation(user.Language, 1, GetPlacesByCategory(place.Categories.Last()), place.Id.ToString()));
+                    break;
+
+                case Substate.GettingPlacesNearby:
+                    user.Substate = Substate.GettingPlaceNavigation;
+
+                    var places = GetAll().ToList();
+                    List<Place> nearbyPlaces = new();
+
+                    foreach (var p in places)
+                        if (CalculateDistanceInMeters(p.Coordinates, place.Coordinates) < 100)
+                            nearbyPlaces.Add(p);
+
+                    await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+
+                    Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
+                            chatId: user.Id,
+                            text: Answer.GetNearbyPlaces[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GettingPlacesInListAndButtonNavigation(user.Language, 1, nearbyPlaces, place.Id.ToString()));
+                    break;
+
+                case Substate.GettingPlaceNavigation:
+                    if (GetPlacesById(int.Parse(message.Text)) != null)
+                        goto case Substate.Start;
+
+                    var listIdAndPageNumber = message.Text.Split("\n").ToList();
+                    places = listIdAndPageNumber[0].Split(" ").Select(id => GetPlacesById(int.Parse(id))).ToList();
+
+                    if (listIdAndPageNumber.Count != 2) listIdAndPageNumber.Add("1");
+
+                    if (int.TryParse(listIdAndPageNumber[1], out int page) && page > 0)                
+                        Settings.LastBotMsg[user.Id] = await botClient.EditMessageTextAsync(
+                                messageId: Settings.LastBotMsg[user.Id].MessageId,
+                                chatId: user.Id,
+                                text: Answer.GetSimilarPlaces[(int)user.Language],
+                                cancellationToken: cancellationToken,
+                                replyMarkup: Keyboard.GettingPlacesInListAndButtonNavigation(user.Language, page, places, place.Id.ToString()));
+                    break;
+
+                case Substate.GettingPlaceRoutes:
+                    user.Substate = Substate.GettingPlaceRoutesNavigation;
+
+                    await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+
+                    Settings.LastBotMsg[user.Id] = await botClient.SendTextMessageAsync(
+                            chatId: user.Id,
+                            text: Answer.GettingRoute[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetRoutesByPlace(user.Language, 1, place, place.Id.ToString()));
+                    break;
+
+                case Substate.GettingPlaceRoutesNavigation:
+                    if (RouteController.GetByName(message.Text) != null)
+                        goto case Substate.Start;
+
+                    var userInputPageNumber = message.Text.Split(" ").ToList();
+
+                    if (userInputPageNumber[0] != $"{place.Id}")
+                        goto case Substate.GettingPlaceRoutes;
+
+
+                    if (userInputPageNumber.Count != 2) userInputPageNumber.Add("1");
+
+                    if (int.TryParse(userInputPageNumber[1], out page) && page > 0)
+                        Settings.LastBotMsg[user.Id] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[user.Id].MessageId,
+                            chatId: user.Id,
+                            text: Answer.GettingRoute[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.GetRoutesByPlace(user.Language, page, place, place.Id.ToString()));
+                    break;
+
+                case Substate.Start:
+                    var route = RouteController.GetByName(message.Text); 
+                    
+                    if (route != null) 
+                    {
+                        await RouteController.GetRouteCard(botClient, cancellationToken, route, user);
+                        break;
+                    }
+
+                    place = GetPlacesById(int.Parse(message.Text));
+
+                    user.Substate = Substate.End;
+                    await UserController.UpdateUser(user);
+
+                    await GetPlaceCard(botClient, cancellationToken, place, user, message);
+                    break;
             }
+        }
+
+        private static double CalculateDistanceInMeters(string firstCoordinats, string secondCoordinats)
+        {
+            var x1 = double.Parse(firstCoordinats.Split(",")[0], System.Globalization.CultureInfo.InvariantCulture);
+            var y1 = double.Parse(firstCoordinats.Split(",")[1], System.Globalization.CultureInfo.InvariantCulture);
+
+            var x2 = double.Parse(secondCoordinats.Split(",")[0], System.Globalization.CultureInfo.InvariantCulture);
+            var y2 = double.Parse(secondCoordinats.Split(",")[1], System.Globalization.CultureInfo.InvariantCulture);
+
+            var cosinusX1 = Math.Cos(x1);
+            var cosinusX2 = Math.Cos(x2);
+
+            var sinusX1 = Math.Sin(x1);
+            var sinusX2 = Math.Sin(x2);
+
+            var delta = y2 - y1;
+
+            var cosinusDelta = Math.Cos(delta);
+            var sinusDelta = Math.Sin(delta);
+
+            var y = Math.Sqrt(Math.Pow(cosinusX2 * sinusDelta, 2) + Math.Pow(cosinusX1 * sinusX2 - sinusX1 * cosinusX2 * cosinusDelta, 2));
+            var x = sinusX1 * sinusX2 + cosinusX1 * cosinusX2 * cosinusDelta;
+
+            var ad = Math.Atan2(y, x);
+            return ad * 6372795;
         }
     }
 }

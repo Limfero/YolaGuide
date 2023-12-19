@@ -21,6 +21,8 @@ namespace YolaGuide
 
         public static int NumberObjectsPerPage { get { return 6; } }
 
+        public static int MaxLengthInliteButton { get { return 32; } }
+
         public static List<long> Admins { get { return new() { 1059169240, 1802751981 }; } }
 
         public static Dictionary<long, Message> LastBotMsg = new();

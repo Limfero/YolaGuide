@@ -10,18 +10,18 @@ namespace YolaGuide.DAL.Configurations
         {
             builder.ToTable("fact");
 
-            builder.HasKey(fact => fact.Id)
-                .HasName("id_fact");
+            builder.Property(fact => fact.Id)
+                 .HasColumnName("id_fact")
+                 .ValueGeneratedOnAdd()
+                 .IsRequired();
 
             builder.Property(fact => fact.Name)
                 .HasColumnName("name")
-                .HasMaxLength(50)
                 .IsRequired();
 
             builder.Property(fact => fact.Description)
                 .HasColumnName("description")
                 .HasColumnType("text")
-                .HasMaxLength(50)
                 .IsRequired();
         }
     }

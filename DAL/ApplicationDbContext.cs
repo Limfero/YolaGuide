@@ -10,11 +10,11 @@ namespace YolaGuide.DAL
         public DbSet<User> Users { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Fact> Facts { get; set; }
-        public DbSet<Route> Routs { get; set; }
+        public DbSet<Route> Routes { get; set; }
 
         public ApplicationDbContext()
         {
-            Database.EnsureCreated();
+          //  Database.EnsureDeleted();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

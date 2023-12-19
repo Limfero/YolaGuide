@@ -83,7 +83,7 @@ namespace YolaGuide.Controllers
                         break;
 
                     _newUserFact[chatId].Name = userInput;
-                    user.Substate = Substate.GettingPlaceDescription;
+                    user.Substate = Substate.GettingFactDescription;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
@@ -101,14 +101,11 @@ namespace YolaGuide.Controllers
                     await CreateAsync(_newUserFact[chatId]);
                     _newUserFact[chatId] = new();
 
-                    user.State = State.Start;
-                    user.Substate = Substate.Start;
-
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.SuccessfullyAdded[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetStart(chatId, user.Language));
+                        replyMarkup: Keyboard.SuccessfullyAdded(user.Language));
                     break;
             }
 
@@ -138,9 +135,6 @@ namespace YolaGuide.Controllers
                     if (fact != null)
                     {
                         await RemoveAsync(fact);
-
-                        user.State = State.Start;
-                        user.Substate = Substate.Start;
 
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,

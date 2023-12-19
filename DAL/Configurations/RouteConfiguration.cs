@@ -10,12 +10,13 @@ namespace YolaGuide.DAL.Configurations
         {
             builder.ToTable("route");
 
-            builder.HasKey(route => route.Id)
-                .HasName("id_route");
+            builder.Property(route => route.Id)
+                 .HasColumnName("id_route")
+                 .ValueGeneratedOnAdd()
+                 .IsRequired();
 
             builder.Property(route => route.Name)
                 .HasColumnName("name")
-                .HasMaxLength(50)
                 .IsRequired();
 
             builder.Property(route => route.Description)

@@ -1,5 +1,4 @@
-﻿using YolaGuide.DAL.Repositories.Implimentation;
-using YolaGuide.DAL.Repositories.Interfaces;
+﻿using YolaGuide.DAL.Repositories.Interfaces;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
@@ -25,7 +24,8 @@ namespace YolaGuide.Service
                     Name = model.Name,
                     Description = model.Description,
                     Cost = model.Cost,
-                    Telephone = model.Telephone
+                    Telephone = model.Telephone,
+                    Places = model.Places           
                 };
 
                 await _routeRepository.CreateAsync(route);
@@ -93,6 +93,30 @@ namespace YolaGuide.Service
             try
             {
                 var routes = _routeRepository.GetRouteByName(name);
+
+
+                return new BaseResponse<Route>()
+                {
+                    Data = routes,
+                    StatusCode = StatusCode.OK
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<Route>()
+                {
+                    Description = $"[RouteService.GetRouteByName] - {ex.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public IBaseResponse<Route> GetRouteById(int id)
+        {
+            try
+            {
+                var routes = _routeRepository.GetRouteById(id);
 
 
                 return new BaseResponse<Route>()

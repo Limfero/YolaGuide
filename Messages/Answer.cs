@@ -48,6 +48,12 @@ namespace YolaGuide.Messages
             "Choose the categories you are interested in:"
         };
 
+        public static List<string> GettingRoute { get; set; } = new()
+        {
+            "Выберете маршрут:",
+            "Choose a route:"
+        };
+
         public static List<string> Added { get; set; } = new()
         {
             "Добавлено!",
@@ -84,6 +90,24 @@ namespace YolaGuide.Messages
             "In your plan for today:\n"
         };
 
+        public static List<string> PlacesInRoute { get; set; } = new()
+        {
+            "Места в маршруте:",
+            "Places on the itinerary:"
+        };
+
+        public static List<string> GetSimilarPlaces { get; set; } = new()
+        {
+            "Похожие места:",
+            "Similar places:"
+        };
+
+        public static List<string> GetNearbyPlaces { get; set; } = new()
+        {
+            "Места рядом:",
+            "Places close by:"
+        };
+
         // Ошибочки
         public static List<string> WrongCommand { get; set; } = new()
         {
@@ -118,27 +142,27 @@ namespace YolaGuide.Messages
         // Добавление места
         public static List<string> EnteringPlaceName { get; set; } = new()
         {
-            "Введи имя нового места(сначала на русском, потом через строчку на английском):",
-            "Enter the name of the new place(first Russian then English with a space):"
+            "Введи имя нового места(сначала на русском, потом через две строчки на английском):",
+            "Enter the name of the new place(first in Russian, then two lines later in English):"
         };
 
         public static List<string> EnteringPlaceDescription { get; set; } = new()
         {
-            "Введи описание места(сначала на русском, потом через строчку на английском):",
-            "Enter the description of the place(first in Russian, then a line later in English):"
+            "Введи описание места(сначала на русском, потом через две строчки на английском):",
+            "Enter the description of the place(first in Russian, then two lines later in English):"
         };
 
         public static List<string> EnteringPlaceAdress { get; set; } = new()
         {
-            "Введи адрес места(сначала на русском, потом через строчку на английском):",
-            "Enter the address of the place(first in Russian, then a line later in English):"
+            "Введи адрес места(сначала на русском, потом через две строчки на английском):",
+            "Enter the address of the place(first in Russian, then two lines later in English):"
         };
 
 
         public static List<string> EnteringPlaceContactInformation { get; set; } = new()
         {
-            "Введи контактную информацию для этого места(сначала на русском, потом через строчку на английском):",
-            "Enter the contact information for this place (first in Russian, then across the line in English):"
+            "Введи контактную информацию для этого места(сначала на русском, потом через две строчки на английском):",
+            "Enter the contact information for this place(first in Russian, then two lines later in English):"
         };
 
         public static List<string> EnteringPlaceImage { get; set; } = new()
@@ -168,8 +192,8 @@ namespace YolaGuide.Messages
         // Добавление категории
         public static List<string> EnteringCategoryName { get; set; } = new()
         {
-            "Введи название новой категории(сначала на русском, потом через строчку на английском):",
-            "Enter the name of the new category(first Russian then English with a space):"
+            "Введи название новой категории(сначала на русском, потом через две строчки на английском):",
+            "Enter the name of the new category(first in Russian, then two lines later in English):"
         };
 
         public static List<string> EnteringCategorySubcategory { get; set; } = new()
@@ -181,27 +205,27 @@ namespace YolaGuide.Messages
         //Добавление фатка
         public static List<string> EnteringFactName { get; set; } = new()
         {
-            "Придумай название фактика(сначала на русском, потом через строчку на английском):",
-            "Think up a name for the factoid(first in Russian, then across the line in English):"
+            "Придумай название фактика(сначала на русском, потом через две строчки на английском):",
+            "Think up a name for the factoid(first in Russian, then two lines later in English):"
         };
 
         public static List<string> EnteringFactDescription { get; set; } = new()
         {
-            "Ну и давай свой факт(сначала на русском, потом через строчку на английском):",
-            "So give me your fact(first in Russian, then across the line in English):"
+            "Ну и давай свой факт(сначала на русском, потом через две строчки на английском):",
+            "So give me your fact(first in Russian, then two lines later in English):"
         };
 
         //Добавление маршрута
         public static List<string> EnteringRouteName { get; set; } = new()
         {
-            "Введи название маршрута(сначала на русском, потом через строчку на английском):",
-            "Enter the name of the route (first in Russian, then across the line in English):"
+            "Введи название маршрута(сначала на русском, потом через две строчки на английском):",
+            "Enter the name of the route(first in Russian, then two lines later in English):"
         };
 
         public static List<string> EnteringRouteDescription { get; set; } = new()
         {
-            "Введи описание маршрута(сначала на русском, потом через строчку на английском):",
-            "Enter a description of the route (first in Russian, then through a line in English):"
+            "Введи описание маршрута(сначала на русском, потом через две строчки на английском):",
+            "Enter a description of the route(first in Russian, then two lines later in English):"
         };
 
         public static List<string> EnteringRouteCost { get; set; } = new()
@@ -276,31 +300,31 @@ namespace YolaGuide.Messages
 
         public static string GetPlaceInformation(Place place, Language language)
         {
-            string[] name = place.Name.Split("\n\n");
-            string[] description = place.Description.Split("\n\n");
+            string[] name = place.Name.Split("\n\n\n");
+            string[] description = place.Description.Split("\n\n\n");
 
             return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
         }
 
         public static string GetFactInformation(Fact fact, Language language)
         {
-            string[] name = fact.Name.Split("\n\n");
-            string[] description = fact.Description.Split("\n\n");
+            string[] name = fact.Name.Split("\n\n\n");
+            string[] description = fact.Description.Split("\n\n\n");
 
             return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
         }
 
         public static string GetRouteInformation(Route route, Language language)
         {
-            string[] name = route.Name.Split("\n\n");
-            string[] description = route.Description.Split("\n\n");
+            string[] name = route.Name.Split("\n\n\n");
+            string[] description = route.Description.Split("\n\n\n");
             string cost = route.Cost == 0 ? "Бесплатно" : route.Cost.ToString();
-            string telephone = route.Telephone;
+            string[] telephone = route.Telephone == "Нет" ? new[] { "Нет", "No" } : new[] { route.Telephone, route.Telephone };
 
             string[] messageCost = new[] { "Цена", "Cost" };
             string[] messageTelephone = new[] { "Телефон", "Telephone" };
 
-            return string.Format("{0}\n{1}\n{2} {3}\n{4} {5}", name[(int)language], description[(int)language], messageCost[(int)language], cost[(int)language], messageTelephone[(int)language], telephone[(int)language]);
+            return string.Format("{0}\n{1}\n{2} {3}\n{4} {5}", name[(int)language], description[(int)language], messageCost[(int)language], cost, messageTelephone[(int)language], telephone[(int)language]);
         }
 
         public static string GetPlanInformation(User user)
@@ -310,8 +334,8 @@ namespace YolaGuide.Messages
 
             for(int i = 0; i < placesInPlan.Count; i++) 
             {
-                var name = placesInPlan[i].Name.Split("\n\n")[(int)user.Language];
-                var adress = placesInPlan[i].Adress.Split("\n\n")[(int)user.Language];
+                var name = placesInPlan[i].Name.Split("\n\n\n")[(int)user.Language];
+                var adress = placesInPlan[i].Adress.Split("\n\n\n")[(int)user.Language];
 
                 result += $"{i + 1}) {name}\n{adress}\n\n";
             }

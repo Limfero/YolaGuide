@@ -10,14 +10,13 @@ namespace YolaGuide.DAL.Configurations
         {
             builder.ToTable("place");
 
-            builder.HasIndex(place => place.Name);
-
-            builder.HasKey(place => place.Id)
-                .HasName("id_place");
+            builder.Property(place => place.Id)
+                 .HasColumnName("id_place")
+                 .ValueGeneratedOnAdd()
+                 .IsRequired();
 
             builder.Property(place => place.Name)
                 .HasColumnName("name")
-                .HasMaxLength(50)
                 .IsRequired();
 
             builder.Property(place => place.Description)

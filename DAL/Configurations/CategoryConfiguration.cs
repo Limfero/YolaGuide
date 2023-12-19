@@ -17,7 +17,6 @@ namespace YolaGuide.DAL.Configurations
 
             builder.Property(category => category.Name)
                 .HasColumnName("name")
-                .HasMaxLength(50)
                 .IsRequired();
 
             builder.HasOne(category => category.Subcategory)

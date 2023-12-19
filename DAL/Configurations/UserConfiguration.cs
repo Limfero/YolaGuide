@@ -17,7 +17,6 @@ namespace YolaGuide.DAL.Configurations
 
             builder.Property(user => user.Username)
                 .HasColumnName("username")
-                .HasMaxLength(50)
                 .IsRequired();
 
             builder.Property(user => user.State)

@@ -60,6 +60,16 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
+        public static Route GetById(int id)
+        {
+            var response = _routeService.GetRouteById(id);
+
+            if (response.StatusCode == StatusCode.OK)
+                return response.Data;
+
+            throw new Exception(response.Description);
+        }
+
         public static async Task AddRouteAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var userInput = message.Text;
@@ -122,11 +132,11 @@ namespace YolaGuide.Controllers
                 case Substate.GettingRouteTelephone:
                     user.Substate = Substate.GettingRoutePlaces;
 
-                    _newUserRoute[chatId].Description = userInput;
+                    _newUserRoute[chatId].Telephone = userInput;
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                        text: Answer.EnteringRouteCost[(int)user.Language],
+                        text: Answer.EnteringRoutePlaces[(int)user.Language],
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.GetAllPlace(user.Language, 1));
                     break;
@@ -160,9 +170,9 @@ namespace YolaGuide.Controllers
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
-                            text: Answer.EnteringPlanPlace[(int)user.Language],
+                            text: Answer.EnteringRoutePlaces[(int)user.Language],
                             cancellationToken: cancellationToken,
-                            replyMarkup: Keyboard.GetAllPlace(user.Language, page));
+                            replyMarkup: Keyboard.GetAllPlacesWithoutRoute(user.Language, page, _newUserRoute[chatId].Places));
                     break;
 
                 case Substate.GettingRoutePlaceAdress:
@@ -179,16 +189,17 @@ namespace YolaGuide.Controllers
 
                     user.Substate = Substate.GettingRoutePlaces;
 
-                    var keyboard = Keyboard.GetAllPlace(user.Language, 1);
+                    var keyboard = Keyboard.GetAllPlacesWithoutRoute(user.Language, 1, _newUserRoute[chatId].Places);
 
                     keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                     {
                         InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал!", "I chose everything!" }[(int)user.Language], "Я все выбрал!"),
                     }));
 
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
-                        text: Answer.EnteringRouteCost[(int)user.Language],
+                        text: Answer.EnteringRoutePlaces[(int)user.Language],
                         cancellationToken: cancellationToken,
                         replyMarkup: keyboard);
                     break;
@@ -197,14 +208,12 @@ namespace YolaGuide.Controllers
                     await CreateAsync(_newUserRoute[chatId]);
                     _newUserRoute[chatId] = new();
 
-                    user.State = State.Start;
-                    user.Substate = Substate.Start;
-
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.SuccessfullyAdded[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetStart(chatId, user.Language));
+                        replyMarkup: Keyboard.SuccessfullyAdded(user.Language));
                     break;
             }
 
@@ -218,7 +227,7 @@ namespace YolaGuide.Controllers
             switch (user.Substate)
             {
                 case Substate.Start:
-                    user.Substate = Substate.GettingPlaceToDelete;
+                    user.Substate = Substate.GettingRouteToDelete;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -234,9 +243,6 @@ namespace YolaGuide.Controllers
                     if (route != null)
                     {
                         await RemoveAsync(route);
-
-                        user.State = State.Start;
-                        user.Substate = Substate.Start;
 
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -279,10 +285,14 @@ namespace YolaGuide.Controllers
                 case Substate.Start:
                     user.Substate = Substate.GettingAllRoute;
 
-                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
-                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                    if (message.Text == "Назад")
+                        await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                             chatId: chatId,
-                            text: Answer.DeleteFact[(int)user.Language],
+                            text: Answer.GettingRoute[(int)user.Language],
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetAllRoutes(user.Language, 1));
                     break;
@@ -300,13 +310,8 @@ namespace YolaGuide.Controllers
                     var userInputPageNumber = message.Text.Split(" ").ToList();
 
                     if (userInputPageNumber[0] != "all")
-                    {
-                        user.Substate = Substate.GettingAllPlaceInRoute;
+                        goto case Substate.GettingAllPlaceInRoute;
 
-                        await BaseController.ShowError(botClient, cancellationToken, user);
-
-                        return;
-                    }
 
                     if (userInputPageNumber.Count != 2) userInputPageNumber.Add("1");
 
@@ -314,12 +319,14 @@ namespace YolaGuide.Controllers
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
-                            text: Answer.DeleteFact[(int)user.Language],
+                            text: Answer.GettingRoute[(int)user.Language],
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetAllRoutes(user.Language, page));
                     break;
 
                 case Substate.GettingAllPlaceInRoute:
+                    user.Substate = Substate.End;
+
                     var idPlaces = message.Text.Split(" ");
 
                     List<Place> places = new();
@@ -330,7 +337,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
-                            text: Answer.DeleteFact[(int)user.Language],
+                            text: Answer.PlacesInRoute[(int)user.Language],
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetPlaceInList(user.Language, places));
                     break;
@@ -345,7 +352,7 @@ namespace YolaGuide.Controllers
                         break;
                     }
 
-                    await PlaceController.GetPlaceCard(botClient, cancellationToken, place, user);
+                    await PlaceController.GetPlaceCard(botClient, cancellationToken, place, user, message);
                     break;
 
             }
@@ -353,7 +360,7 @@ namespace YolaGuide.Controllers
             await UserController.UpdateUser(user);
         }
 
-        private static async Task GetRouteCard(ITelegramBotClient botClient, CancellationToken cancellationToken, Route route, Domain.Entity.User user)
+        public static async Task GetRouteCard(ITelegramBotClient botClient, CancellationToken cancellationToken, Route route, Domain.Entity.User user)
         {
             Settings.LastBotMsg[user.Id] = await botClient.EditMessageTextAsync(
                        messageId: Settings.LastBotMsg[user.Id].MessageId,

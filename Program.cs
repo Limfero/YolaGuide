@@ -7,6 +7,8 @@ using YolaGuide.Messages;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Controllers;
 using Telegram.Bot.Types.ReplyMarkups;
+using YolaGuide.Domain.Entity;
+using Microsoft.VisualBasic;
 
 namespace YolaGuide
 {
@@ -159,7 +161,7 @@ namespace YolaGuide
                         chatId: chatId,
                         text: Answer.SelectAdmin[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.SelectToDeleteOrAdd(user.Language, "admin"));
+                        replyMarkup: Keyboard.SelectToDeleteOrAdd(user.Language, ""));
                     break;
 
                 case "дай факт!":
@@ -198,7 +200,10 @@ namespace YolaGuide
                         break;
                     }
 
-                    await PlaceController.GetPlaceCard(botClient, cancellationToken, place, user);
+                    user.Substate = Substate.End;
+                    await UserController.UpdateUser(user);
+
+                    await PlaceController.GetPlaceCard(botClient, cancellationToken, place, user, message);
                     break;
 
                 case "план на сегодня":
@@ -285,7 +290,15 @@ namespace YolaGuide
             await botClient.AnswerCallbackQueryAsync(callbackQuery.Id, cancellationToken: cancellationToken);
             var message = new Message() { Text = callbackQuery.Data, Chat = callbackQuery.Message.Chat, MediaGroupId = callbackQuery.Id };
 
-            switch (callbackQuery.Data.Split("\n")[0])
+            var callback = callbackQuery.Data.Split("\n");
+
+            var callbackData = callback[0];
+            var additionalInformation = "";
+
+            if (callback.Length == 2)
+                additionalInformation = callback[1];
+
+            switch (callbackData)
             {
                 case "English":
                 case "Русский":
@@ -304,8 +317,11 @@ namespace YolaGuide
                     goto case "Главное меню";
 
                 case "Уточнение предпочтений":
+                    user.Categories = new();
                     user.State = State.ClarificationOfPreferences;
                     user.Substate = Substate.Start;
+
+                    await UserController.UpdateUser(user);
 
                     await CategoryController.ClarificationOfPreferencesAsync(botClient, message, cancellationToken, user);
                     break;
@@ -335,8 +351,8 @@ namespace YolaGuide
 
                 case "Добавить":
                 case "Удалить":
-                    if (callbackQuery.Data.Split("\n")[1] == "plan")
-                        if (callbackQuery.Data.Split("\n")[0] == "Добавить")
+                    if (additionalInformation == "plan")
+                        if (callbackData == "Добавить")
                             goto case "Добавить в план";
                         else
                             goto case "Удалить из плана";
@@ -346,7 +362,39 @@ namespace YolaGuide
                         chatId: chatId,
                         text: Answer.ObjectSelection[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.ChoosingWhatToAdd(user.Language, callbackQuery.Data));
+                        replyMarkup: Keyboard.ChoosingWhatToAdd(user.Language, callbackData));
+                    break;
+
+                case "В план":
+                    var place = PlaceController.GetPlacesById(int.Parse(additionalInformation));
+                    place.Categories = new();
+                    place.Routes = new();
+
+                    user.Places.Add(place);
+
+                    user.Substate = Substate.End;
+                    await UserController.UpdateUser(user);
+
+                    await botClient.AnswerCallbackQueryAsync(message.MediaGroupId, Answer.Added[(int)user.Language]);
+                    await PlaceController.GetPlaceCard(botClient, cancellationToken, place, user, message);
+                    break;
+
+                case "Контактная информация":
+                case "Маршруты":
+                case "Места рядом":
+                case "Похожие места":
+                case "Карточка места":
+                    place = PlaceController.GetPlacesById(int.Parse(additionalInformation));
+
+                    if(callbackData == "Контактная информация") user.Substate = Substate.GettingPlaceInformation;
+                    else if(callbackData == "Маршруты") user.Substate = Substate.GettingPlaceRoutes;
+                    else if (callbackData == "Места рядом") user.Substate = Substate.GettingPlacesNearby;
+                    else if (callbackData == "Похожие места") user.Substate = Substate.GettingSimilarPlaces;
+                    else if (callbackData == "Назад") user.Substate = Substate.End;
+
+                    await UserController.UpdateUser(user);
+
+                    await PlaceController.GetPlaceCard(botClient, cancellationToken, place, user, message);
                     break;
 
                 case "Добавить место":
@@ -410,7 +458,7 @@ namespace YolaGuide
                     user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
-                    await RouteController.DeleteRouteAsync(botClient, message, cancellationToken, user);
+                    await FactController.DeleteFactAsync(botClient, message, cancellationToken, user);
                     break;
 
                 case "Удалить маршрут":
@@ -418,7 +466,7 @@ namespace YolaGuide
                     user.Substate = Substate.Start;
                     await UserController.UpdateUser(user);
 
-                    await PlaceController.DeletePlaceAsync(botClient, message, cancellationToken, user);
+                    await RouteController.DeleteRouteAsync(botClient, message, cancellationToken, user);
                     break;
 
                 case "Редактировать план":
@@ -460,10 +508,26 @@ namespace YolaGuide
                     goto default;
 
                 case "Назад":
+                    List<Substate> cardSubstation = new()
+                    {
+                        Substate.GettingSimilarPlaces,
+                        Substate.GettingPlacesNearby,
+                        Substate.GettingPlaceInformation,
+                        Substate.GettingPlaceRoutes,
+                        Substate.GettingPlaceNavigation,
+                        Substate.GettingPlaceRoutesNavigation,
+                    };
+
+                    if (cardSubstation.Contains(user.Substate))
+                        goto case "Карточка места";
+
                     await BackState(user);
                     goto default;
 
                 default:
+                    if (user.Substate == Substate.GettingPlaceRoutesNavigation || user.Substate == Substate.GettingPlaceNavigation)
+                        await PlaceController.GetPlaceCard(botClient, cancellationToken, PlaceController.GetPlacesById(int.Parse(callbackData)), user, message);
+
                     if (user.Substate != Substate.End && callbackQuery.Data != "Назад")
                         await botClient.AnswerCallbackQueryAsync(callbackQuery.Id, Answer.Added[(int)user.Language]);
 
@@ -587,6 +651,10 @@ namespace YolaGuide
 
                 case State.DeletePlaceInPlan:
                     await PlaceController.DeletePlaceInPlan(botClient, message, cancellationToken, user);
+                    break;
+
+                case State.GetRotes:
+                    await RouteController.GetAllRoutes(botClient, message, cancellationToken, user);
                     break;
             }
         }

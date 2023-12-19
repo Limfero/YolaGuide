@@ -135,18 +135,12 @@ namespace YolaGuide.Controllers
 
                     await CreateAsync(_newUserCategory[chatId]);
 
-                    user.State = State.Start;
-                    user.Substate = Substate.Start;
-
-                    await botClient.DeleteMessageAsync(
-                        chatId: user.Id,
-                        messageId: Settings.LastBotMsg[user.Id].MessageId);
-
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.SuccessfullyAdded[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetStart(chatId, user.Language));
+                        replyMarkup: Keyboard.SuccessfullyAdded(user.Language));
                     break;
             }
 
@@ -201,8 +195,12 @@ namespace YolaGuide.Controllers
                     if (category.Subcategories.Count == 0)
                     {
                         category.Subcategory = null;
+                        category.Places = null;
 
                         user.Categories.Add(category);
+
+                        await UserController.UpdateUser(user);
+
                         category = null;
                     }
 
@@ -257,9 +255,6 @@ namespace YolaGuide.Controllers
                     if (category.Subcategories.Count == 0)
                     {
                         await RemoveAsync(category);
-
-                        user.State = State.Start;
-                        user.Substate = Substate.Start;
 
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,

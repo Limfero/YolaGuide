@@ -37,7 +37,6 @@
         //Добавление места в план на сегодня
         GettingPlanCategory = 60,
         GettingPlanPlaceName = 61,
-        GettingPlanPlace = 62,
 
         //Поиск
         GettingPlaceNameSearch = 70,
@@ -64,5 +63,13 @@
 
         //Удаление места из плана
         GettingPlaceInPlanToDelete = 140,
+
+        //Карточка места
+        GettingSimilarPlaces = 150,
+        GettingPlacesNearby = 151,
+        GettingPlaceInformation = 152,
+        GettingPlaceRoutes = 153,
+        GettingPlaceNavigation = 154,
+        GettingPlaceRoutesNavigation = 155,
     }
 }

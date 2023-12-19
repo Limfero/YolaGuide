@@ -11,9 +11,26 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         {
         }
 
+        public override async Task<Route> CreateAsync(Route entity)
+        {
+            var places = entity.Places;
+            entity.Places = new();
+
+            _dbContext.Routes.Add(entity);
+            await _dbContext.SaveChangesAsync();
+
+            foreach (var place in places)
+                 place.Categories = null;
+
+            entity.Places.AddRange(places);
+            await _dbContext.SaveChangesAsync();
+
+            return entity;
+        }
+
         public override IQueryable<Route> GetAll()
         {
-            return _dbContext.Routs
+            return _dbContext.Routes
                 .Include(route => route.Places)
                 .Include(route => route.Users)
                 .AsSplitQuery();
@@ -21,11 +38,22 @@ namespace YolaGuide.DAL.Repositories.Implimentation
 
         public Route GetRouteByName(string name)
         {
-            return _dbContext.Routs
+            var routes = _dbContext.Routes
                 .Include(route => route.Places)
                 .Include(route => route.Users)
                 .AsSplitQuery()
-                .FirstOrDefault(route => route.Name.Contains(name));
+                .ToList();
+
+            return routes.FirstOrDefault(route => route.Name == name);
+        }
+
+        public Route GetRouteById(int id)
+        {
+            return _dbContext.Routes
+                .Include(route => route.Places)
+                .Include(route => route.Users)
+                .AsSplitQuery()
+                .FirstOrDefault(route => route.Id == id);
         }
     }
 }
