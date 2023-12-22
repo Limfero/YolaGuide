@@ -368,7 +368,7 @@ namespace YolaGuide.Messages
             string[] name = route.Name.Split("\n\n\n");
             string[] description = route.Description.Split("\n\n\n");
             string cost = route.Cost == 0 ? "Бесплатно" : route.Cost.ToString();
-            string[] telephone = route.Telephone == "Нет" ? new[] { "Нет", "No" } : new[] { route.Telephone, route.Telephone };
+            string[] telephone = route.Telephone.Trim() == "нет" || route.Telephone.Trim() == "no" ? new[] { "Нет", "No" } : new[] { route.Telephone, route.Telephone };
 
             string[] messageCost = new[] { "Цена", "Cost" };
             string[] messageTelephone = new[] { "Телефон", "Telephone" };

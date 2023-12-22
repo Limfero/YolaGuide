@@ -24,6 +24,7 @@ namespace YolaGuide.DAL.Repositories.Implimentation
             {
                 place.Categories = null;
                 place.Users = null;
+                place.Routes = null;
             }
 
             entity.Places.AddRange(places);

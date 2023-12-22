@@ -87,6 +87,9 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingRouteName:
+                    if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
+                        break;
+
                     user.Substate = Substate.GettingRouteDescription;
 
                     _newUserRoute[chatId].Name = userInput;
@@ -98,6 +101,9 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingRouteDescription:
+                    if (await BaseController.IsNotCorrectInput(userInput, botClient, cancellationToken, user))
+                        break;
+
                     user.Substate = Substate.GettingRouteCost;
 
                     _newUserRoute[chatId].Description = userInput;
