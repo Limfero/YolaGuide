@@ -71,5 +71,8 @@
         GettingPlaceRoutes = 153,
         GettingPlaceNavigation = 154,
         GettingPlaceRoutesNavigation = 155,
+
+        //О городе
+        Information = 160,
     }
 }

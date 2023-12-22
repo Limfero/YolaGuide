@@ -154,10 +154,13 @@ namespace YolaGuide.Controllers
             switch (user.Substate)
             {
                 case Substate.Start:
-                    user.Substate = Substate.GettingPreferencesCategories;
-
                     if (user == null)
                     {
+                        await UserController.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = message.From.Username == null ? "Anonimys" : message.From.Username });
+                        user = UserController.GetUserById(chatId);
+
+                        user.State = State.ClarificationOfPreferences;
+
                         Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
@@ -166,6 +169,8 @@ namespace YolaGuide.Controllers
                             replyMarkup: Keyboard.ClarificationPreferences(user.Language));
                         break;
                     }
+
+                    user.Substate = Substate.GettingPreferencesCategories;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                            messageId: Settings.LastBotMsg[chatId].MessageId,

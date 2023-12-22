@@ -8,6 +8,7 @@ using YolaGuide.Messages;
 using YolaGuide.DAL.Repositories.Implimentation;
 using YolaGuide.Domain.Entity;
 using Azure;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace YolaGuide.Controllers
 {
@@ -16,6 +17,8 @@ namespace YolaGuide.Controllers
         private static readonly PlaceService _placeService = new(new PlaceRepository(new ApplicationDbContext()));
         private static readonly Dictionary<long, PlaceViewModel> _newUserPlaces = new();
         private static readonly Random _random = new();
+
+        private static Message _deleteMessage = null;
 
         public static void AddNewPairInDictionary(long chatId)
         {
@@ -71,7 +74,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static Place GetPlacesById(int id)
+        public static Place GetPlaceById(int id)
         {
             var response = _placeService.GetPlaceById(id);
 
@@ -246,8 +249,12 @@ namespace YolaGuide.Controllers
                 case Substate.Start:
                     user.Substate = Substate.GettingPlanCategory;
 
+                    if(message.Text == "Назад")
+                        await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
 
-                    if (message.Text == "Назад" || message.Text == "Добавить\nplan")
+                    if (message.Text == "Добавить\nplan")
                         goto case Substate.GettingPlanCategory;
 
                     var answer = user.Places.Count == 0 ? Answer.PlanIsEmpty : Answer.MakingPlan;
@@ -267,12 +274,12 @@ namespace YolaGuide.Controllers
 
                     if (category == null)
                     {
-                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
-                           messageId: Settings.LastBotMsg[chatId].MessageId,
-                           chatId: chatId,
-                           text: Answer.MakingPlan[(int)user.Language],
-                           cancellationToken: cancellationToken,
-                           replyMarkup: Keyboard.PlanCategorySelection(null, user.Language));
+                           Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                               messageId: Settings.LastBotMsg[chatId].MessageId,
+                               chatId: chatId,
+                               text: Answer.MakingPlan[(int)user.Language],
+                               cancellationToken: cancellationToken,
+                               replyMarkup: Keyboard.PlanCategorySelection(null, user.Language));
 
                         break;
                     }
@@ -299,7 +306,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingPlanPlaceName:
-                    if(GetPlacesByName(message.Text) != null)
+                    if(GetPlacesByName(message.Text).Count != 0)
                     {
                         user.Substate = Substate.End;
 
@@ -335,7 +342,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.End:
-                    var place = GetPlacesById(int.Parse(message.Text));
+                    var place = GetPlaceById(int.Parse(message.Text));
 
                     if (place == null)
                     {
@@ -360,6 +367,11 @@ namespace YolaGuide.Controllers
                 case Substate.Start:
                     user.Substate = Substate.GettingPlaceInPlan;
 
+                    if(message.Text == "Назад" || message.Text == "В план на сегодня")
+                        await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                                 chatId: chatId,
                                 text: Answer.GetPlanInformation(user),
@@ -379,7 +391,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.End:
-                    var place = GetPlacesById(int.Parse(message.Text));
+                    var place = GetPlaceById(int.Parse(message.Text));
 
                     if (place == null)
                     {
@@ -403,6 +415,16 @@ namespace YolaGuide.Controllers
             switch (user.Substate)
             {
                 case Substate.Start:
+                    if (message.Text == "Назад") 
+                    {
+                        user.State = State.GetPlan;
+                        await UserController.UpdateUser(user);
+
+                        await GetPlan(botClient, message, cancellationToken, user);
+
+                        break;
+                    }
+
                     user.Substate = Substate.GettingPlaceInPlanToDelete;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
@@ -414,7 +436,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingPlaceInPlanToDelete:
-                    var place = GetPlacesById(int.Parse(message.Text));
+                    var place = GetPlaceById(int.Parse(message.Text));
 
                     if (place == null)
                     {
@@ -427,8 +449,6 @@ namespace YolaGuide.Controllers
 
                     user.Places.Remove(place);
                     await UserController.UpdateUser(user);
-
-                    user.Substate = Substate.Start;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -451,6 +471,11 @@ namespace YolaGuide.Controllers
                 case Substate.Start:
                     user.Substate = Substate.GettingPlaceNameSearch;
 
+                    if (message.Text.Contains("Назад"))
+                        await botClient.DeleteMessageAsync(
+                        chatId: chatId,
+                        messageId: Settings.LastBotMsg[chatId].MessageId);
+
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                             chatId: chatId,
                             text: Answer.EnteringStringToSearch[(int)user.Language],
@@ -459,14 +484,8 @@ namespace YolaGuide.Controllers
                 case Substate.GettingPlaceNameSearch:
                     var userInput = message.Text;
 
-                    if (userInput == "Назад")
-                    {
-                        await botClient.DeleteMessageAsync(
-                        chatId: user.Id,
-                        messageId: Settings.LastBotMsg[user.Id].MessageId);
-
+                    if (message.Text.Contains("Назад"))
                         goto case Substate.Start;
-                    }
 
                     user.Substate = Substate.GettingPlaceAdressSearch;
 
@@ -478,7 +497,9 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingPlaceAdressSearch:
+
                     var places = SearchPlace(message.Text);
+
                     if (places.Count != 0)
                     {
                         user.Substate = Substate.End;
@@ -505,9 +526,9 @@ namespace YolaGuide.Controllers
                             replyMarkup: Keyboard.GetResultSearch(user.Language, userInputPageNumber[0], page));
                     break;
                 case Substate.End:
-                    var place = GetPlacesById(int.Parse(message.Text));
+                    var place = GetPlaceById(int.Parse(message.Text));
 
-                    if (GetPlacesById(int.Parse(message.Text)) == null)
+                    if (GetPlaceById(int.Parse(message.Text)) == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 
@@ -533,6 +554,19 @@ namespace YolaGuide.Controllers
             {
                 case Substate.Start:
                     user.Substate = Substate.GettingPlaceToDelete;
+
+                    if (message.Text == "Назад") 
+                    {
+                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                            messageId: Settings.LastBotMsg[chatId].MessageId,
+                            chatId: chatId,
+                            text: Answer.SelectAdmin[(int)user.Language],
+                            cancellationToken: cancellationToken,
+                            replyMarkup: Keyboard.ChoosingWhatToAdd(user.Language, "Удалить"));
+
+                        break;
+                    }
+
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -578,14 +612,14 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.End:
-                    if (GetPlacesById(int.Parse(message.Text)) == null)
+                    if (GetPlaceById(int.Parse(message.Text)) == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 
                         break;
                     }
 
-                    await RemoveAsync(GetPlacesById(int.Parse(message.Text)));
+                    await RemoveAsync(GetPlaceById(int.Parse(message.Text)));
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -631,7 +665,7 @@ namespace YolaGuide.Controllers
                             photo: InputFile.FromStream(fileStream),
                             caption: Answer.GetPlaceInformation(place, user.Language),
                             cancellationToken: cancellationToken,
-                            replyMarkup: Keyboard.GetPlaceCard(user.Language, place, user));
+                            replyMarkup: Keyboard.GetPlaceCard(user.Language, place, user, message.Text));
                     }
                     break;
 
@@ -683,11 +717,11 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingPlaceNavigation:
-                    if (GetPlacesById(int.Parse(message.Text)) != null)
+                    if (GetPlaceById(int.Parse(message.Text)) != null)
                         goto case Substate.Start;
 
                     var listIdAndPageNumber = message.Text.Split("\n").ToList();
-                    places = listIdAndPageNumber[0].Split(" ").Select(id => GetPlacesById(int.Parse(id))).ToList();
+                    places = listIdAndPageNumber[0].Split(" ").Select(id => GetPlaceById(int.Parse(id))).ToList();
 
                     if (listIdAndPageNumber.Count != 2) listIdAndPageNumber.Add("1");
 
@@ -744,7 +778,7 @@ namespace YolaGuide.Controllers
                         break;
                     }
 
-                    place = GetPlacesById(int.Parse(message.Text));
+                    place = GetPlaceById(int.Parse(message.Text));
 
                     user.Substate = Substate.End;
                     await UserController.UpdateUser(user);
@@ -752,6 +786,88 @@ namespace YolaGuide.Controllers
                     await GetPlaceCard(botClient, cancellationToken, place, user, message);
                     break;
             }
+        }
+
+        public async static Task AboutCity(ITelegramBotClient botClient, CancellationToken cancellationToken, Domain.Entity.User user, Message message)
+        {
+            var chatId = message.Chat.Id;
+
+            switch (user.Substate)
+            {
+                case Substate.Start:
+                    user.Substate = Substate.Information;
+
+                    if (_deleteMessage != null)
+                    {
+                        await botClient.DeleteMessageAsync(
+                            chatId: user.Id,
+                            messageId: _deleteMessage.MessageId);
+
+                        _deleteMessage = null;
+                    }
+
+                    if(message.Text == "Назад")
+                        await botClient.DeleteMessageAsync(
+                            chatId: user.Id,
+                            messageId: Settings.LastBotMsg[chatId].MessageId);
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: Answer.AboutCity[(int)user.Language],
+                                cancellationToken: cancellationToken,
+                                replyMarkup: Keyboard.AboutCity(user.Language));
+                    break;
+
+                case Substate.Information:
+                    var keyboard = new InlineKeyboardMarkup(new List<InlineKeyboardButton[]>());
+                    var answer = "";
+
+                    await botClient.DeleteMessageAsync(
+                        chatId: user.Id,
+                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+
+                    switch (message.Text)
+                    {
+                        case "Как добраться?":
+                            keyboard = Keyboard.Back(user.Language);
+                            answer = Answer.HowToGetThere[(int)user.Language];
+                            break;
+
+                        case "Что посмотреть?":
+                            _deleteMessage =  await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: Answer.WhatToSee[(int)user.Language],
+                                cancellationToken: cancellationToken);
+
+                            keyboard = Keyboard.Back(user.Language);
+                            answer = Answer.WhatToSee2[(int)user.Language];
+                            break;
+
+                        case "Что попробовать?":
+                            keyboard = Keyboard.Back(user.Language);
+                            answer = Answer.WhatToTryFromFood[(int)user.Language];
+                            break;
+
+                        case "Где жить?":
+                            keyboard = Keyboard.Back(user.Language);
+                            answer = Answer.WhereToLive[(int)user.Language];
+                            break;
+
+                        case "Что привезти?":
+                            keyboard = Keyboard.Back(user.Language);
+                            answer = Answer.WhatCanIBring[(int)user.Language];
+                            break;
+                    }
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                            chatId: chatId,
+                            text: answer,
+                            cancellationToken: cancellationToken,
+                            replyMarkup: keyboard);
+                    break;
+            }
+
+            await UserController.UpdateUser(user);
         }
 
         private static double CalculateDistanceInMeters(string firstCoordinats, string secondCoordinats)

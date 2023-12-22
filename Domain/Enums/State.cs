@@ -18,5 +18,6 @@
         GetRotes = 21,
         GetPlan = 22,
         DeletePlaceInPlan = 23,
+        AboutCity = 24,
     }
 }

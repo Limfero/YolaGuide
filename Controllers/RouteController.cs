@@ -176,7 +176,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingRoutePlaceAdress:
-                    var place = PlaceController.GetPlacesById(int.Parse(message.Text));
+                    var place = PlaceController.GetPlaceById(int.Parse(message.Text));
 
                     if (place == null)
                     {
@@ -285,10 +285,12 @@ namespace YolaGuide.Controllers
                 case Substate.Start:
                     user.Substate = Substate.GettingAllRoute;
 
-                    if (message.Text == "Назад")
+                    if (message.Text.Contains("Назад"))
+                    {
                         await botClient.DeleteMessageAsync(
-                        chatId: user.Id,
-                        messageId: Settings.LastBotMsg[user.Id].MessageId);
+                            chatId: user.Id,
+                            messageId: Settings.LastBotMsg[user.Id].MessageId);
+                    }
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                             chatId: chatId,
@@ -332,7 +334,7 @@ namespace YolaGuide.Controllers
                     List<Place> places = new();
 
                     foreach (var id in idPlaces)
-                        places.Add(PlaceController.GetPlacesById(int.Parse(id)));
+                        places.Add(PlaceController.GetPlaceById(int.Parse(id)));
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -343,9 +345,9 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.End:
-                    var place = PlaceController.GetPlacesById(int.Parse(message.Text));
+                    var place = PlaceController.GetPlaceById(int.Parse(message.Text));
 
-                    if (PlaceController.GetPlacesById(int.Parse(message.Text)) == null)
+                    if (PlaceController.GetPlaceById(int.Parse(message.Text)) == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 
