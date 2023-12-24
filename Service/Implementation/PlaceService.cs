@@ -3,10 +3,11 @@ using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
 using YolaGuide.Domain.ViewModel;
 using YolaGuide.DAL.Repositories.Interfaces;
+using YolaGuide.Service.Interfaces;
 
-namespace YolaGuide.Service
+namespace YolaGuide.Service.Implementation
 {
-    public class PlaceService
+    public class PlaceService : IPlaceService
     {
         private readonly IPlaceRepository _placeRepository;
 
@@ -19,7 +20,7 @@ namespace YolaGuide.Service
         {
             try
             {
-                var place = new Place() 
+                var place = new Place()
                 {
                     Name = model.Name,
                     Description = model.Description,
@@ -194,6 +195,5 @@ namespace YolaGuide.Service
                 };
             }
         }
-
     }
 }

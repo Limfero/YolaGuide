@@ -3,10 +3,11 @@ using YolaGuide.Domain.Response;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.ViewModel;
 using YolaGuide.DAL.Repositories.Interfaces;
+using YolaGuide.Service.Interfaces;
 
-namespace YolaGuide.Service
+namespace YolaGuide.Service.Implementation
 {
-    public class CategoryService
+    public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
 
@@ -129,14 +130,14 @@ namespace YolaGuide.Service
                     StatusCode = StatusCode.OK
                 };
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 return new BaseResponse<Category>()
                 {
                     Description = $"[CategoryService.CreateCategory] - {ex.Message}",
                     StatusCode = StatusCode.InternalServerError
                 };
-            }   
+            }
         }
 
         public async Task<IBaseResponse<Category>> RemoveCategoryAsync(Category category)
@@ -158,6 +159,6 @@ namespace YolaGuide.Service
                     StatusCode = StatusCode.InternalServerError
                 };
             }
-        } 
+        }
     }
 }

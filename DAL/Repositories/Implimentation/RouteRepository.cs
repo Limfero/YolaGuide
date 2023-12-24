@@ -22,9 +22,9 @@ namespace YolaGuide.DAL.Repositories.Implimentation
 
             foreach (var place in places)
             {
-                place.Categories = null;
-                place.Users = null;
-                place.Routes = null;
+                place.Categories = new();
+                place.Users = new();
+                place.Routes = new();
             }
 
             entity.Places.AddRange(places);

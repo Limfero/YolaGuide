@@ -1,21 +1,24 @@
 ﻿using Telegram.Bot.Types;
 using Telegram.Bot;
-using YolaGuide.DAL;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.ViewModel;
-using YolaGuide.Service;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Messages;
-using YolaGuide.DAL.Repositories.Implimentation;
+using YolaGuide.Service.Interfaces;
 
 namespace YolaGuide.Controllers
 {
-    public static class CategoryController
+    public class CategoryController
     {
-        private static readonly CategoryService _categoryService = new(new CategoryRepository(new ApplicationDbContext()));
-        private static readonly Dictionary<long, CategoryViewModel> _newUserCategory = new();
+        private readonly ICategoryService _categoryService;
+        private readonly Dictionary<long, CategoryViewModel> _newUserCategory = new();
 
-        public static void AddNewPairInDictionary(long chatId)
+        public CategoryController(ICategoryService categoryService)
+        {
+            _categoryService = categoryService; 
+        }
+
+        public void AddNewPairInDictionary(long chatId)
         {
             if (_newUserCategory.ContainsKey(chatId))
                 _newUserCategory[chatId] = new();
@@ -23,7 +26,7 @@ namespace YolaGuide.Controllers
                 _newUserCategory.Add(chatId, new());
         }
 
-        public static Category GetCategoryByName(string name)
+        public Category GetCategoryByName(string name)
         {
             var response = _categoryService.GetCategoryByName(name);
 
@@ -33,7 +36,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static Category GetCategoryById(int id)
+        public Category GetCategoryById(int id)
         {
             var response = _categoryService.GetCategoryById(id);
 
@@ -43,7 +46,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static List<Category> GetCategories(Category category)
+        public List<Category> GetCategories(Category category)
         {
             var response = _categoryService.GetCategores(category);
 
@@ -53,7 +56,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static async Task CreateAsync(CategoryViewModel model)
+        public async Task CreateAsync(CategoryViewModel model)
         {
             var response = await _categoryService.CreateCategoryAsync(model);
 
@@ -61,7 +64,7 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-        public static async Task RemoveAsync(Category category)
+        public async Task RemoveAsync(Category category)
         {
             var response = await _categoryService.RemoveCategoryAsync(category);
 
@@ -69,7 +72,7 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-        public static async Task AddCategoryAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task AddCategoryAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var userInput = message.Text;
             var chatId = message.Chat.Id;
@@ -144,10 +147,10 @@ namespace YolaGuide.Controllers
                     break;
             }
 
-            await UserController.UpdateUser(user);
+            await Settings.UserController.UpdateUser(user);
         }
 
-        public static async Task ClarificationOfPreferencesAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task ClarificationOfPreferencesAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var chatId = message.Chat.Id;
 
@@ -156,8 +159,8 @@ namespace YolaGuide.Controllers
                 case Substate.Start:
                     if (user == null)
                     {
-                        await UserController.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = message.From.Username == null ? "Anonimys" : message.From.Username });
-                        user = UserController.GetUserById(chatId);
+                        await Settings.UserController.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = message.From.Username == null ? "Anonimys" : message.From.Username });
+                        user = Settings.UserController.GetUserById(chatId);
 
                         user.State = State.ClarificationOfPreferences;
 
@@ -204,7 +207,7 @@ namespace YolaGuide.Controllers
 
                         user.Categories.Add(category);
 
-                        await UserController.UpdateUser(user);
+                        await Settings.UserController.UpdateUser(user);
 
                         category = null;
                     }
@@ -226,10 +229,10 @@ namespace YolaGuide.Controllers
                     break;
             }
 
-            await UserController.UpdateUser(user);
+            await Settings.UserController.UpdateUser(user);
         }
 
-        public static async Task DeleteCategoryAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task DeleteCategoryAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var userInput = message.Text;
             var chatId = message.Chat.Id;
@@ -277,7 +280,7 @@ namespace YolaGuide.Controllers
                     break;
             }
 
-            await UserController.UpdateUser(user);
+            await Settings.UserController.UpdateUser(user);
         }
     }
 }

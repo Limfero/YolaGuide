@@ -12,15 +12,9 @@ namespace YolaGuide.DAL
         public DbSet<Fact> Facts { get; set; }
         public DbSet<Route> Routes { get; set; }
 
-        public ApplicationDbContext()
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-          //  Database.EnsureDeleted();
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer(Settings.ConnectionString);
-            optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Warning);
+          //   Database.EnsureCreated();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

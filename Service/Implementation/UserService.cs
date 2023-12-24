@@ -3,10 +3,11 @@ using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
 using YolaGuide.Domain.ViewModel;
+using YolaGuide.Service.Interfaces;
 
-namespace YolaGuide.Service
+namespace YolaGuide.Service.Implementation
 {
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
 
@@ -17,7 +18,7 @@ namespace YolaGuide.Service
 
         public async Task<IBaseResponse<User>> CreateUserAsync(UserViewModel model)
         {
-            try 
+            try
             {
                 var user = new User()
                 {

@@ -5,9 +5,9 @@ using YolaGuide.Domain.Entity;
 
 namespace YolaGuide.DAL.Repositories.Implimentation
 {
-    public class FactReposutory : BaseRepository<Fact>, IFactRepository
+    public class FactRepository : BaseRepository<Fact>, IFactRepository
     {
-        public FactReposutory(ApplicationDbContext dbContext) : base(dbContext)
+        public FactRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
         }
 

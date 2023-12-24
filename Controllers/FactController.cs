@@ -1,22 +1,25 @@
 ﻿using Telegram.Bot.Types;
 using Telegram.Bot;
-using YolaGuide.DAL.Repositories.Implimentation;
-using YolaGuide.DAL;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.ViewModel;
-using YolaGuide.Service;
 using YolaGuide.Messages;
 using YolaGuide.Domain.Entity;
+using YolaGuide.Service.Interfaces;
 
 namespace YolaGuide.Controllers
 {
     public class FactController
     {
-        private static readonly FactService _factService = new(new FactReposutory(new ApplicationDbContext()));
-        private static readonly Dictionary<long, FactViewModel> _newUserFact = new();
-        private static readonly Random _random = new Random();
+        private readonly IFactService _factService;
+        private readonly Dictionary<long, FactViewModel> _newUserFact = new();
+        private readonly Random _random = new();
 
-        public static void AddNewPairInDictionary(long chatId)
+        public FactController(IFactService factService)
+        {
+            _factService = factService;
+        }
+
+        public void AddNewPairInDictionary(long chatId)
         {
             if (_newUserFact.ContainsKey(chatId))
                 _newUserFact[chatId] = new();
@@ -24,7 +27,7 @@ namespace YolaGuide.Controllers
                 _newUserFact.Add(chatId, new());
         }
 
-        public static async Task CreateAsync(FactViewModel model)
+        public async Task CreateAsync(FactViewModel model)
         {
             var response = await _factService.CreateFactAsync(model);
 
@@ -32,7 +35,7 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-        public static async Task RemoveAsync(Fact fact)
+        public async Task RemoveAsync(Fact fact)
         {
             var response = await _factService.RemoveFactAsync(fact);
 
@@ -40,8 +43,7 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-
-        public static List<Fact> GetAll()
+        public List<Fact> GetAll()
         {
             var response = _factService.GetAllFact();
 
@@ -51,7 +53,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static Fact GetFactByName(string name)
+        public Fact GetFactByName(string name)
         {
             var response = _factService.GetFactByName(name);
 
@@ -61,7 +63,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static async Task AddFactAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task AddFactAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var userInput = message.Text;
             var chatId = message.Chat.Id;
@@ -109,10 +111,10 @@ namespace YolaGuide.Controllers
                     break;
             }
 
-            await UserController.UpdateUser(user);
+            await Settings.UserController.UpdateUser(user);
         }
 
-        public static async Task DeleteFactAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task DeleteFactAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var chatId = message.Chat.Id;
 
@@ -168,7 +170,7 @@ namespace YolaGuide.Controllers
             }
         }
 
-        public static Fact GetRandomFact()
+        public Fact GetRandomFact()
         {
             var facts = GetAll();
 

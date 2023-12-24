@@ -3,10 +3,11 @@ using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
 using YolaGuide.Domain.ViewModel;
+using YolaGuide.Service.Interfaces;
 
-namespace YolaGuide.Service
+namespace YolaGuide.Service.Implementation
 {
-    public class RouteService
+    public class RouteService : IRouteService
     {
         private readonly IRouteRepository _routeRepository;
 
@@ -25,7 +26,7 @@ namespace YolaGuide.Service
                     Description = model.Description,
                     Cost = model.Cost,
                     Telephone = model.Telephone,
-                    Places = model.Places           
+                    Places = model.Places
                 };
 
                 await _routeRepository.CreateAsync(route);

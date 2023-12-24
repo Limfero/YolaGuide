@@ -1,22 +1,26 @@
-﻿using YolaGuide.DAL.Repositories.Implimentation;
-using YolaGuide.DAL;
-using YolaGuide.Domain.ViewModel;
-using YolaGuide.Service;
+﻿using YolaGuide.Domain.ViewModel;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
 using Telegram.Bot.Types;
 using Telegram.Bot;
 using YolaGuide.Messages;
 using Telegram.Bot.Types.ReplyMarkups;
+using YolaGuide.Service.Interfaces;
 
 namespace YolaGuide.Controllers
 {
     public class RouteController
     {
-        private static readonly RouteService _routeService = new(new RouteRepository(new ApplicationDbContext()));
-        private static readonly Dictionary<long, RouteViewModel> _newUserRoute = new();
+        private readonly IRouteService _routeService;
 
-        public static void AddNewPairInDictionary(long chatId)
+        public RouteController(IRouteService routeService)
+        {
+            _routeService = routeService;
+        }
+
+        private readonly Dictionary<long, RouteViewModel> _newUserRoute = new();
+
+        public void AddNewPairInDictionary(long chatId)
         {
             if (_newUserRoute.ContainsKey(chatId))
                 _newUserRoute[chatId] = new();
@@ -24,7 +28,7 @@ namespace YolaGuide.Controllers
                 _newUserRoute.Add(chatId, new());
         }
 
-        public static async Task CreateAsync(RouteViewModel model)
+        public async Task CreateAsync(RouteViewModel model)
         {
             var response = await _routeService.CreateRouteAsync(model);
 
@@ -32,7 +36,7 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-        public static async Task RemoveAsync(Route route)
+        public async Task RemoveAsync(Route route)
         {
             var response = await _routeService.RemoveRouteAsync(route);
 
@@ -40,7 +44,7 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-        public static List<Route> GetAll()
+        public List<Route> GetAll()
         {
             var response = _routeService.GetAllRoutes();
 
@@ -50,7 +54,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static Route GetByName(string name)
+        public Route GetByName(string name)
         {
             var response = _routeService.GetRouteByName(name);
 
@@ -60,7 +64,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static Route GetById(int id)
+        public Route GetById(int id)
         {
             var response = _routeService.GetRouteById(id);
 
@@ -70,7 +74,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static async Task AddRouteAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task AddRouteAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var userInput = message.Text;
             var chatId = message.Chat.Id;
@@ -144,11 +148,11 @@ namespace YolaGuide.Controllers
                         chatId: chatId,
                         text: Answer.EnteringRoutePlaces[(int)user.Language],
                         cancellationToken: cancellationToken,
-                        replyMarkup: Keyboard.GetAllPlace(user.Language, 1));
+                        replyMarkup: Keyboard.GetAllPlacesWithoutRoute(user.Language, 1, _newUserRoute[chatId].Places));
                     break;
 
                 case Substate.GettingRoutePlaces:
-                    if (PlaceController.GetPlacesByName(message.Text) != null)
+                    if (Settings.PlaceController.GetPlacesByName(message.Text).Count != 0)
                     {
                         user.Substate = Substate.GettingRoutePlaceAdress;
 
@@ -182,7 +186,7 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.GettingRoutePlaceAdress:
-                    var place = PlaceController.GetPlaceById(int.Parse(message.Text));
+                    var place = Settings.PlaceController.GetPlaceById(int.Parse(message.Text));
 
                     if (place == null)
                     {
@@ -212,7 +216,7 @@ namespace YolaGuide.Controllers
 
                 case Substate.End:
                     await CreateAsync(_newUserRoute[chatId]);
-                    _newUserRoute[chatId] = new();
+                    _newUserRoute[chatId].Places = new();
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                         messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -223,10 +227,10 @@ namespace YolaGuide.Controllers
                     break;
             }
 
-            await UserController.UpdateUser(user);
+            await Settings.UserController.UpdateUser(user);
         }
 
-        public static async Task DeleteRouteAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task DeleteRouteAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var chatId = message.Chat.Id;
 
@@ -282,7 +286,7 @@ namespace YolaGuide.Controllers
             }
         }
 
-        public static async Task GetAllRoutes(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task GetAllRoutes(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
         {
             var chatId = message.Chat.Id;
 
@@ -340,7 +344,7 @@ namespace YolaGuide.Controllers
                     List<Place> places = new();
 
                     foreach (var id in idPlaces)
-                        places.Add(PlaceController.GetPlaceById(int.Parse(id)));
+                        places.Add(Settings.PlaceController.GetPlaceById(int.Parse(id)));
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                             messageId: Settings.LastBotMsg[chatId].MessageId,
@@ -351,24 +355,24 @@ namespace YolaGuide.Controllers
                     break;
 
                 case Substate.End:
-                    var place = PlaceController.GetPlaceById(int.Parse(message.Text));
+                    var place = Settings.PlaceController.GetPlaceById(int.Parse(message.Text));
 
-                    if (PlaceController.GetPlaceById(int.Parse(message.Text)) == null)
+                    if (Settings.PlaceController.GetPlaceById(int.Parse(message.Text)) == null)
                     {
                         await BaseController.ShowError(botClient, cancellationToken, user);
 
                         break;
                     }
 
-                    await PlaceController.GetPlaceCard(botClient, cancellationToken, place, user, message);
+                    await Settings.PlaceController.GetPlaceCard(botClient, cancellationToken, place, user, message);
                     break;
 
             }
 
-            await UserController.UpdateUser(user);
+            await Settings.UserController.UpdateUser(user);
         }
 
-        public static async Task GetRouteCard(ITelegramBotClient botClient, CancellationToken cancellationToken, Route route, Domain.Entity.User user)
+        public async Task GetRouteCard(ITelegramBotClient botClient, CancellationToken cancellationToken, Route route, Domain.Entity.User user)
         {
             Settings.LastBotMsg[user.Id] = await botClient.EditMessageTextAsync(
                        messageId: Settings.LastBotMsg[user.Id].MessageId,

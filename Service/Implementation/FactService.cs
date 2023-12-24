@@ -3,10 +3,11 @@ using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Domain.Response;
 using YolaGuide.Domain.ViewModel;
+using YolaGuide.Service.Interfaces;
 
-namespace YolaGuide.Service
+namespace YolaGuide.Service.Implementation
 {
-    internal class FactService
+    public class FactService : IFactService
     {
         private readonly IFactRepository _factRepository;
 

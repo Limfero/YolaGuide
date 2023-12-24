@@ -16,13 +16,16 @@ namespace YolaGuide.DAL.Repositories.Implimentation
             var categories = entity.Categories;
             foreach (var category in categories)
             {
+                category.Users = new();
                 category.Subcategories = new();
                 category.Places = new();
                 category.Subcategory = null;
             }
 
+
             entity.Categories = new();
             entity.Users = new();
+            entity.Routes = new();
 
             _dbContext.Plases.Add(entity);
             await _dbContext.SaveChangesAsync();

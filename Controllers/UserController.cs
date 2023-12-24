@@ -1,16 +1,19 @@
-﻿using YolaGuide.DAL;
-using YolaGuide.DAL.Repositories.Implimentation;
-using YolaGuide.Domain.Entity;
+﻿using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.ViewModel;
-using YolaGuide.Service;
+using YolaGuide.Service.Interfaces;
 
 namespace YolaGuide.Controllers
 {
-    public static class UserController
+    public class UserController
     {
-        private static readonly UserService _userService = new(new UserRepository(new ApplicationDbContext()));
+        private readonly IUserService _userService;
 
-        public static async Task CreateUser(UserViewModel model)
+        public UserController(IUserService userService)
+        {
+            _userService = userService;
+        }
+
+        public async Task CreateUser(UserViewModel model)
         {
             var response = await _userService.CreateUserAsync(model);
 
@@ -18,7 +21,7 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-        public static async Task UpdateUser(User user) 
+        public async Task UpdateUser(User user)  
         {
             var response = await _userService.Update(user);
 
@@ -26,7 +29,7 @@ namespace YolaGuide.Controllers
                 throw new Exception(response.Description);
         }
 
-        public static List<User> GetAllUsers()
+        public List<User> GetAllUsers()
         {
             var response = _userService.GetUsers();
 
@@ -36,7 +39,7 @@ namespace YolaGuide.Controllers
             throw new Exception(response.Description);
         }
 
-        public static User GetUserById(long id)
+        public User GetUserById(long id)
         {
             var response = _userService.GetUserById(id);
 

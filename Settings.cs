@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.ConstrainedExecution;
 using Telegram.Bot.Types;
+using YolaGuide.Controllers;
 using YolaGuide.Domain.Enums;
 
 namespace YolaGuide
@@ -19,12 +20,22 @@ namespace YolaGuide
 
         public static string URLYandexRoute { get { return "https://yandex.ru/maps/?rtext={0}&rtt=mt"; } }
 
-        public static int NumberObjectsPerPage { get { return 6; } }
+        public static int NumberObjectsPerPage { get { return 3; } }
 
         public static int MaxLengthInliteButton { get { return 32; } }
 
         public static List<long> Admins { get { return new() { 1059169240, 1802751981 }; } }
 
         public static Dictionary<long, Message> LastBotMsg = new();
+
+        public static UserController UserController;
+
+        public static FactController FactController;
+
+        public static PlaceController PlaceController;
+
+        public static RouteController RouteController;
+
+        public static CategoryController CategoryController;
     }
 }
