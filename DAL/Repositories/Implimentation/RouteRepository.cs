@@ -15,17 +15,9 @@ namespace YolaGuide.DAL.Repositories.Implimentation
         {
             var places = entity.Places;
             entity.Places = new();
-            entity.Users = new();
 
             _dbContext.Routes.Add(entity);
             await _dbContext.SaveChangesAsync();
-
-            foreach (var place in places)
-            {
-                place.Categories = new();
-                place.Users = new();
-                place.Routes = new();
-            }
 
             entity.Places.AddRange(places);
             await _dbContext.SaveChangesAsync();

@@ -1,8 +1,6 @@
 ﻿using System.Reflection;
-using System.Runtime.ConstrainedExecution;
 using Telegram.Bot.Types;
 using YolaGuide.Controllers;
-using YolaGuide.Domain.Enums;
 
 namespace YolaGuide
 {
@@ -24,9 +22,13 @@ namespace YolaGuide
 
         public static int MaxLengthInliteButton { get { return 32; } }
 
-        public static List<long> Admins { get { return new() { 1059169240, 1802751981 }; } }
+        public static int DistanceBetweenTwoLocations { get { return 200; } }
+
+        public static List<long> Admins { get { return new() { 1059169240, 1802751981, 2040550071 }; } }
 
         public static Dictionary<long, Message> LastBotMsg = new();
+
+        public static Message DeleteMessage = null;
 
         public static UserController UserController;
 

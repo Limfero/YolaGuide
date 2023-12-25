@@ -12,8 +12,8 @@ using YolaGuide.DAL;
 namespace YolaGuide.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231219023659_Createdb")]
-    partial class Createdb
+    [Migration("20231225130829_CreateDb")]
+    partial class CreateDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -137,6 +137,10 @@ namespace YolaGuide.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()

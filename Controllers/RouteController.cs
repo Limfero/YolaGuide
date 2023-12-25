@@ -6,6 +6,7 @@ using Telegram.Bot;
 using YolaGuide.Messages;
 using Telegram.Bot.Types.ReplyMarkups;
 using YolaGuide.Service.Interfaces;
+using Telegram.Bot.Types.Enums;
 
 namespace YolaGuide.Controllers
 {
@@ -87,6 +88,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.EnteringRouteName[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
                     break;
 
@@ -101,6 +103,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.EnteringRouteDescription[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
                     break;
 
@@ -115,6 +118,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.EnteringRouteCost[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
                     break;
 
@@ -124,6 +128,7 @@ namespace YolaGuide.Controllers
                         Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.WrongInputFormat[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
 
                         break;
@@ -136,6 +141,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.EnteringRouteTelephone[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
                     break;
 
@@ -147,6 +153,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.EnteringRoutePlaces[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.GetAllPlacesWithoutRoute(user.Language, 1, _newUserRoute[chatId].Places));
                     break;
@@ -160,6 +167,7 @@ namespace YolaGuide.Controllers
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
                             text: Answer.EnteringPlanAdress[(int)user.Language],
+                            parseMode: ParseMode.Html,
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetPlaceAddressesByName(message.Text, user.Language));
                         break;
@@ -181,6 +189,7 @@ namespace YolaGuide.Controllers
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
                             text: Answer.EnteringRoutePlaces[(int)user.Language],
+                            parseMode: ParseMode.Html,
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetAllPlacesWithoutRoute(user.Language, page, _newUserRoute[chatId].Places));
                     break;
@@ -210,6 +219,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.EnteringRoutePlaces[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: keyboard);
                     break;
@@ -222,6 +232,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.SuccessfullyAdded[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.SuccessfullyAdded(user.Language));
                     break;
@@ -243,6 +254,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.DeleteFact[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.GetAllRoutes(user.Language, 1));
                     break;
@@ -258,6 +270,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.SuccessfullyDellete[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.Back(user.Language));
 
@@ -280,6 +293,7 @@ namespace YolaGuide.Controllers
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
                             text: Answer.DeleteFact[(int)user.Language],
+                            parseMode: ParseMode.Html,
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetAllRoutes(user.Language, page));
                     break;
@@ -305,6 +319,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                             chatId: chatId,
                             text: Answer.GettingRoute[(int)user.Language],
+                            parseMode: ParseMode.Html,
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetAllRoutes(user.Language, 1));
                     break;
@@ -332,6 +347,7 @@ namespace YolaGuide.Controllers
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
                             text: Answer.GettingRoute[(int)user.Language],
+                            parseMode: ParseMode.Html,
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetAllRoutes(user.Language, page));
                     break;
@@ -350,6 +366,7 @@ namespace YolaGuide.Controllers
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
                             text: Answer.PlacesInRoute[(int)user.Language],
+                            parseMode: ParseMode.Html,
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetPlaceInList(user.Language, places));
                     break;
@@ -378,6 +395,7 @@ namespace YolaGuide.Controllers
                        messageId: Settings.LastBotMsg[user.Id].MessageId,
                        chatId: user.Id,
                        text: Answer.GetRouteInformation(route, user.Language),
+                       parseMode: ParseMode.Html,
                        cancellationToken: cancellationToken,
                        replyMarkup: Keyboard.GetRouteCard(user.Language, route));
         }

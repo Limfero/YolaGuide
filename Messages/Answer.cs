@@ -30,6 +30,12 @@ namespace YolaGuide.Messages
             "Preferences have been successfully set up!"
         };
 
+        public static List<string> Playbill { get; set; } = new()
+        {
+            "В данный момент этот раздел в разработке, но вы можете посмотреть афишу на <a href=\"https://afisha.yandex.ru/yoshkar-ola\">сайте</a>",
+            "Preferences have been successfully set up!"
+        };
+
         public static List<string> SelectAdmin { get; set; } = new()
         {
             "Куда идем, магистр?",
@@ -108,6 +114,24 @@ namespace YolaGuide.Messages
             "Places close by:"
         };
 
+        public static List<string> Blank { get; set; } = new()
+        {
+            "Ой... Не ожидали, что вы сюда зайдете...\nТут пока ничего нет, но в будущем обязательно появиться! <s>Наверное</s>",
+            "Oh... We didn't expect you to come here...\nThere's nothing here yet, but there will be in the future!"
+        };
+
+        public static List<string> SuccessfulLanguageChange { get; set; } = new()
+        {
+            "Язык успешно сменен!",
+            "The language has been successfully changed!"
+        };
+
+        public static List<string> ClarificationPreferences { get; set; } = new()
+        {
+            "Вы хотите выбрать категории мест, которые вас интересуют?",
+            "Do you want to select the categories of places you are interested in?"
+        };
+
         // Ошибочки
         public static List<string> WrongCommand { get; set; } = new()
         {
@@ -161,8 +185,8 @@ namespace YolaGuide.Messages
 
         public static List<string> EnteringPlaceContactInformation { get; set; } = new()
         {
-            "Введи контактную информацию для этого места(сначала на русском, потом через две строчки на английском):",
-            "Enter the contact information for this place(first in Russian, then two lines later in English):"
+            "Введи контактную информацию для этого места(сначала на русском, потом через две строчки на английском) (если контактной информации нет введите \"Нет\"):",
+            "Enter the contact information for this place(first in Russian, then two lines later in English) (if there is no contact information, enter \"No\"):"
         };
 
         public static List<string> EnteringPlaceImage { get; set; } = new()
@@ -215,6 +239,12 @@ namespace YolaGuide.Messages
             "So give me your fact(first in Russian, then two lines later in English):"
         };
 
+        public static List<string> EnteringFactImage { get; set; } = new()
+        {
+            "Теперь нужена фотография на обложку факта:",
+            "Now we need a cover photo:"
+        };
+
         //Добавление маршрута
         public static List<string> EnteringRouteName { get; set; } = new()
         {
@@ -249,7 +279,7 @@ namespace YolaGuide.Messages
         //Добавление в план
         public static List<string> PlanIsEmpty { get; set; } = new()
         {
-            "Ваш план пуст! Давайте выберем куда отправиться сегодня?:",
+            "Ваш план пуст! Давайте выберем куда отправиться сегодня?",
             "Your plan is empty! Let's pick a place to go today, shall we?"
         };
 
@@ -319,8 +349,8 @@ namespace YolaGuide.Messages
 
         public static List<string> WhatToSee { get; set; } = new()
         {
-            "И вот вы в Йошкар-Оле. Куда же пойти? И как при этом сэкономить? Вариантов в этом случае может быть огромное количество. Маршрут вы можете составить самостоятельно или обратиться за «подсказками» к специалистам Туристско-информационного центра (8 800 222 1105 – бесплатный звонок по России).\r\n\r\nПередвигаться по городу вы можете как на общественном транспорте (стоимость 25 руб. на маршрутках, 20 руб. на троллейбусах), а также на такси (в среднем 50-150 руб. по городу). Но есть еще два варианта: на велосипеде, их можно взять в аренду в любом «прокатном салоне», либо пешком по Йошкар-Оле.\r\n\r\nКаждый турист, который приезжает в Йошкар-Олу, обязательно в своем списке «что увидеть и посмотреть» обозначает набережную реки Малой Кокшаги. Эта ландшафтная достопримечательность привлекает глаз туриста, ведь оказавшись в Йошкар-Оле, тебя не покидает чувство сомнения, «а туда ли я приехал? не в Европе ли я?». Набережная Брюгге напоминает бельгийский город с его пряничными домиками. На ней вы найдете скульптурную композицию супружеской пары Принца Монако и Грейс Келли, а также напротив Президентской школы памятник императрице Елизавете. На противоположном берегу Кокшаги протянулась набережная Амстердам с домами в голландском стиле. Здесь вы увидите скульптуры Ганса крысолова, Рембрандта, Пушкина с Онегиным и др.\r\n\r\nЛюбимым персонажем и «главным жителем» города для многих стал Йошкин кот. Да-да, теперь это не ругательное выражение, а настоящее имя Йошкар-Олинского кота.\r\n\r\nКот вальяжно расположился на скамейке, рядом с ним - импровизированная газета «Голос правды». Этимология именования кота восходит к эвфемизму «Ёшкин кот», где буква «Ё» заменяется на «Йо», что созвучно названию города Йошкар-Ола (в молодежной речи Йошка). Как известно, эскиз Йошкина кота был сделан с обыкновенного рыжего кота, знакомого художникам. Если вы приедете в Йошкар-Олу и не сфотографируетесь с Йошкиным котом, это будет большим упущением. И да, присев к Коту, обязательно на удачу потрите нос и не забудьте прошептать ваше заветное желание ему в ухо. Говорят, он их претворяет в жизнь. ",
-            "And here you are in Yoshkar-Ola. Where to go? And how to save money? There can be a huge number of options in this case. You can make your own itinerary or ask for \"hints\" to the specialists of the Tourist Information Center (8 800 222 1105 - free call within Russia).\r\n\r\nYou can move around the city by public transportation (the cost is 25 rubles on minibuses, 20 rubles on trolleybuses), as well as by cab (on average 50-150 rubles around the city). But there are two more options: by bicycle, they can be rented in any \"rental salon\", or on foot around Yoshkar-Ola.\r\n\r\nEvery tourist who comes to Yoshkar-Ola, necessarily in his list of \"what to see and see\" designates the embankment of the Malaya Kokshaga River. This landscape attraction attracts the tourist's eye, because once in Yoshkar-Ola, you can't help but feel a sense of doubt: \"Have I come to the right place? Am I not in Europe?\". The embankment of Bruges reminds a Belgian city with its gingerbread houses. On it you will find a sculptural composition of the couple of Prince of Monaco and Grace Kelly, as well as a monument to Empress Elizabeth in front of the Presidential School. On the opposite bank of the Kokshaga stretches the Amsterdam embankment with houses in the Dutch style. Here you will see sculptures of Hans the Pied Piper, Rembrandt, Pushkin with Onegin and others.\r\n\r\nThe favorite character and \"main inhabitant\" of the city for many became Yoshkin cat. Yes, yes, now it is not a swear word, but the real name of Yoshkar-Ola cat.\r\nThe cat is sitting on a bench with an improvised newspaper \"Golos Pravda\" next to him. The etymology of the cat's name goes back to the euphemism \"Yoshkin cat\", where the letter \"Yo\" is replaced by \"Yo\", which is consonant with the name of the city of Yoshkar-Ola (in youth speech Yoshka). As you know, the sketch of Yoshkin cat was made from an ordinary red cat familiar to artists. If you come to Yoshkar-Ola and do not take a picture with Yoshkin cat, it will be a big omission. And yes, when you sit down to the cat, be sure to rub his nose for good luck and don't forget to whisper your wish into his ear. They say he makes them come true."
+            "Каждый турист, который приезжает в Йошкар-Олу, обязательно в своем списке «что увидеть и посмотреть» обозначает набережную реки Малой Кокшаги. Эта ландшафтная достопримечательность привлекает глаз туриста, ведь оказавшись в Йошкар-Оле, тебя не покидает чувство сомнения, «а туда ли я приехал? не в Европе ли я?». Набережная Брюгге напоминает бельгийский город с его пряничными домиками. На ней вы найдете скульптурную композицию супружеской пары Принца Монако и Грейс Келли, а также напротив Президентской школы памятник императрице Елизавете. На противоположном берегу Кокшаги протянулась набережная Амстердам с домами в голландском стиле. Здесь вы увидите скульптуры Ганса крысолова, Рембрандта, Пушкина с Онегиным и др.\r\n\r\nЛюбимым персонажем и «главным жителем» города для многих стал Йошкин кот. Да-да, теперь это не ругательное выражение, а настоящее имя Йошкар-Олинского кота.\r\n\r\nКот вальяжно расположился на скамейке, рядом с ним - импровизированная газета «Голос правды». Этимология именования кота восходит к эвфемизму «Ёшкин кот», где буква «Ё» заменяется на «Йо», что созвучно названию города Йошкар-Ола (в молодежной речи Йошка). Как известно, эскиз Йошкина кота был сделан с обыкновенного рыжего кота, знакомого художникам. Если вы приедете в Йошкар-Олу и не сфотографируетесь с Йошкиным котом, это будет большим упущением. И да, присев к Коту, обязательно на удачу потрите нос и не забудьте прошептать ваше заветное желание ему в ухо. Говорят, он их претворяет в жизнь. ",
+            "Every tourist who comes to Yoshkar-Ola, necessarily in his list of \"what to see and see\" designates the embankment of the Malaya Kokshaga River. This landscape attraction attracts the tourist's eye, because once in Yoshkar-Ola, you can't help but feel a sense of doubt: \"Have I come to the right place? Am I not in Europe?\". The embankment of Bruges reminds a Belgian city with its gingerbread houses. On it you will find a sculptural composition of the couple of Prince of Monaco and Grace Kelly, as well as a monument to Empress Elizabeth in front of the Presidential School. On the opposite bank of the Kokshaga stretches the Amsterdam embankment with houses in the Dutch style. Here you will see sculptures of Hans the Pied Piper, Rembrandt, Pushkin with Onegin and others.\r\n\r\nThe favorite character and \"main inhabitant\" of the city for many became Yoshkin cat. Yes, yes, now it is not a swear word, but the real name of Yoshkar-Ola cat.\r\nThe cat is sitting on a bench with an improvised newspaper \"Golos Pravda\" next to him. The etymology of the cat's name goes back to the euphemism \"Yoshkin cat\", where the letter \"Yo\" is replaced by \"Yo\", which is consonant with the name of the city of Yoshkar-Ola (in youth speech Yoshka). As you know, the sketch of Yoshkin cat was made from an ordinary red cat familiar to artists. If you come to Yoshkar-Ola and do not take a picture with Yoshkin cat, it will be a big omission. And yes, when you sit down to the cat, be sure to rub his nose for good luck and don't forget to whisper your wish into his ear. They say he makes them come true."
         };
 
         public static List<string> WhatToSee2 { get; set; } = new()
@@ -352,7 +382,7 @@ namespace YolaGuide.Messages
             string[] name = place.Name.Split("\n\n\n");
             string[] description = place.Description.Split("\n\n\n");
 
-            return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
+            return string.Format("{0}\n{1}", $"<b>{name[(int)language]}</b>", description[(int)language]);
         }
 
         public static string GetFactInformation(Fact fact, Language language)
@@ -360,7 +390,7 @@ namespace YolaGuide.Messages
             string[] name = fact.Name.Split("\n\n\n");
             string[] description = fact.Description.Split("\n\n\n");
 
-            return string.Format("{0}\n{1}", name[(int)language], description[(int)language]);
+            return string.Format("{0}\n{1}", $"<b>{name[(int)language]}</b>", description[(int)language]);
         }
 
         public static string GetRouteInformation(Route route, Language language)
@@ -370,10 +400,10 @@ namespace YolaGuide.Messages
             string cost = route.Cost == 0 ? "Бесплатно" : route.Cost.ToString();
             string[] telephone = route.Telephone.Trim() == "нет" || route.Telephone.Trim() == "no" ? new[] { "Нет", "No" } : new[] { route.Telephone, route.Telephone };
 
-            string[] messageCost = new[] { "Цена", "Cost" };
-            string[] messageTelephone = new[] { "Телефон", "Telephone" };
+            string[] messageCost = new[] { "<b>Цена</b>", "<b>Cost</b>" };
+            string[] messageTelephone = new[] { "<b>Телефон</b>", "<b>Telephone</b>" };
 
-            return string.Format("{0}\n{1}\n{2} {3}\n{4} {5}", name[(int)language], description[(int)language], messageCost[(int)language], cost, messageTelephone[(int)language], telephone[(int)language]);
+            return string.Format("{0}\n{1}\n{2} {3}\n{4} {5}", $"<b>{name[(int)language]}</b>", description[(int)language], messageCost[(int)language], cost, messageTelephone[(int)language], telephone[(int)language]);
         }
 
         public static string GetPlanInformation(User user)

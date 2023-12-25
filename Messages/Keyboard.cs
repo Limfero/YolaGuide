@@ -1,9 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Telegram.Bot.Types.ReplyMarkups;
-using YolaGuide.Controllers;
+﻿using Telegram.Bot.Types.ReplyMarkups;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Domain.Enums;
-using static Azure.Core.HttpHeader;
 
 namespace YolaGuide.Messages
 {
@@ -13,8 +10,8 @@ namespace YolaGuide.Messages
         {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Русский"),
-                InlineKeyboardButton.WithCallbackData("English")
+                InlineKeyboardButton.WithCallbackData("Русский 🇷🇺", "Русский"),
+                InlineKeyboardButton.WithCallbackData("English 🇺🇸", "English")
             }
         });
 
@@ -24,12 +21,12 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], "Назад"),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню", "Back to menu" }[(int)language], "Открыть меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню 🏠", "Back to menu 🏠" }[(int)language], "Открыть меню"),
                 }
             });
         }
@@ -40,12 +37,12 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить ещё", "Add more" }[(int)language], "Назад"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить ещё 🆕", "Add more 🆕" }[(int)language], "Назад"),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню", "Back to menu" }[(int)language], "Открыть меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню 🏠", "Back to menu 🏠" }[(int)language], "Открыть меню"),
                 }
             });
         }
@@ -56,12 +53,12 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], $"Назад\n{callback}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], $"Назад\n{callback}"),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню", "Back to menu" }[(int)language], "Открыть меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню 🏠", "Back to menu 🏠" }[(int)language], "Открыть меню"),
                 }
             });
         }
@@ -72,12 +69,12 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Ещё факт!", "Another fact!" }[(int)language], "Дай факт!"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Ещё факт! 🤔", "Another fact! 🤔" }[(int)language], "Дай факт!"),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню", "Back to menu" }[(int)language], "Открыть меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню 🏠", "Back to menu 🏠" }[(int)language], "Открыть меню"),
                 }
             });
         }
@@ -88,14 +85,21 @@ namespace YolaGuide.Messages
             {
                 new KeyboardButton[]
                 {
-                    new KeyboardButton(new List<string>(){ "О городе", "About the city" }[(int)language]),
-                    new KeyboardButton(new List<string>(){ "Готовые маршруты", "Prepared routes" }[(int)language]),
+                    new KeyboardButton(new List<string>(){ "О городе 🏙️", "About the city 🏙️" }[(int)language]),
+                    new KeyboardButton(new List<string>(){ "Готовые маршруты 🛣️", "Prepared routes 🛣️" }[(int)language]),
+                    new KeyboardButton(new List<string>(){ "Афиша 📃", "Playbill 📃" }[(int)language]),
                 },
 
                 new KeyboardButton[]
                 {
-                    new KeyboardButton(new List<string>(){ "Настройки", "Settings" }[(int)language]),
-                    new KeyboardButton(new List<string>(){ "Открыть меню", "Open menu" }[(int)language])
+                    new KeyboardButton(new List<string>(){ "Запланировать поездку 👜", "Plan a trip 👜" }[(int)language]),
+                    new KeyboardButton(new List<string>(){ "Найти места 🔍", "Find places 🔍" }[(int)language])
+                },
+
+                new KeyboardButton[]
+                {
+                    new KeyboardButton(new List<string>(){ "Настройки ⚙️", "Settings ⚙️" }[(int)language]),
+                    new KeyboardButton(new List<string>(){ "Для маломобильного гостя 🦿", "For a guest with low mobility 🦿" }[(int)language]),
                 }
             })
             { ResizeKeyboard = true };
@@ -103,7 +107,7 @@ namespace YolaGuide.Messages
             if (Settings.Admins.Contains(chatId))
                 keyboard = new ReplyKeyboardMarkup(keyboard.Keyboard.Append(new KeyboardButton[]
                 {
-                    new KeyboardButton(new List<string>(){ "Админ панель", "Admin panel" }[(int)language]),
+                    new KeyboardButton(new List<string>(){ "Админ панель 😎", "Admin panel 😎" }[(int)language]),
                 }));
 
             return keyboard;
@@ -115,14 +119,14 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "План на сегодня", "Today's plan" }[(int)language], "План на сегодня"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Поиск", "Search" }[(int)language], "Поиск")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "План на сегодня 📋", "Today's plan 📋" }[(int)language], "План на сегодня"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Поиск 🔍", "Search 🔍" }[(int)language], "Поиск")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Дай факт!", "Give me a fact!" }[(int)language], "Дай факт!"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Посоветуй место!", "Recommend a place!" }[(int)language], "Посоветуй место!")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Дай факт! 🤔", "Give me a fact! 🤔" }[(int)language], "Дай факт!"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Посоветуй место! 🙏", "Recommend a place! 🙏" }[(int)language], "Посоветуй место!")
                 },
             });
         }
@@ -133,32 +137,32 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Как добраться?", "How to get there?" }[(int)language], "Как добраться?"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Как добраться? 👣", "How to get there? 👣" }[(int)language], "Как добраться?"),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Что посмотреть? Достопримечательности", "What to see? Attractions" }[(int)language], "Что посмотреть?")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Что посмотреть? Достопримечательности 👀", "What to see? Attractions 👀" }[(int)language], "Что посмотреть?")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Что попробовать?", "What to try from food?" }[(int)language], "Что попробовать?")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Что попробовать? 🍽️", "What to try from food? 🍽️" }[(int)language], "Что попробовать?")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Где жить?", "Where to live?" }[(int)language], "Где жить?")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Где жить? 🏡", "Where to live? 🏡" }[(int)language], "Где жить?")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Что привезти?", "What can I bring?" }[(int)language], "Что привезти?")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Что привезти? 🎁", "What can I bring? 🎁" }[(int)language], "Что привезти?")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню", "Back to menu" }[(int)language], "Открыть меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню 🏠", "Back to menu 🏠" }[(int)language], "Открыть меню"),
                 }
             });
         }
@@ -169,12 +173,12 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Да, хочу!", "Yes, I do!" }[(int)language], "Уточнение предпочтений"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Да, хочу! ✅", "Yes, I do! ✅" }[(int)language], "Уточнение предпочтений"),
                 },
                 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Нет, мне нравиться все!", "No, I like everything!" }[(int)language], "Открыть меню")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Нет, мне нравиться все! 😎", "No, I like everything! 😎" }[(int)language], "Открыть меню")
                 }
             });
         }
@@ -185,13 +189,13 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Предпочтения", "Preferences" }[(int)language], "Уточнение предпочтений"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Язык", "Language" }[(int)language], "Уточнение языка")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Предпочтения 🥰", "Preferences 🥰" }[(int)language], "Уточнение предпочтений"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ $"Язык {(language == Language.Russian ? "🇷🇺" : "🇺🇸")}", "Language" }[(int)language], "Уточнение языка")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню", "Back to menu" }[(int)language], "Открыть меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню 🏠", "Back to menu 🏠" }[(int)language], "Открыть меню"),
                 },
             });
         }
@@ -202,13 +206,13 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить", "Add" }[(int)language], $"Добавить\n{whatDeleteOrAdd}"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Удалить", "Delete" }[(int)language], $"Удалить\n{whatDeleteOrAdd}")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить 🆕", "Add 🆕" }[(int)language], $"Добавить\n{whatDeleteOrAdd}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Удалить 🗑️", "Delete 🗑️" }[(int)language], $"Удалить\n{whatDeleteOrAdd}")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                     InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
+                     InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], "Назад"),
                 }
             });
         }
@@ -219,19 +223,19 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Место", "Place" }[(int)language], $"{operation} место"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Категорию", "Category" }[(int)language], $"{operation} категорию")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Место 🏞️", "Place 🏞️" }[(int)language], $"{operation} место"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Категорию 📚", "Category 📚" }[(int)language], $"{operation} категорию")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Маршрут", "Route" }[(int)language], $"{operation} маршрут"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Факт", "Fact" }[(int)language], $"{operation} факт")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Маршрут 🛣️", "Route 🛣️" }[(int)language], $"{operation} маршрут"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Факт 🤔", "Fact 🤔" }[(int)language], $"{operation} факт")
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню", "Back to menu" }[(int)language], "Открыть меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад в меню 🏠", "Back to menu 🏠" }[(int)language], "Открыть меню"),
                 }
             });
         }
@@ -242,13 +246,13 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню!", "On the menu!" }[(int)language], "Открыть меню"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Заново настроить! ↩️", "Readjust! ↩️" }[(int)language], "Уточнение предпочтений"),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Заново настроить!", "Readjust!" }[(int)language], "Уточнение предпочтений"),
-                }
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню! 🏠", "On the menu! 🏠" }[(int)language], "Открыть меню"),
+                },
             });
         }
 
@@ -258,42 +262,41 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Контактная информация", "Contact information" }[(int)language], $"Контактная информация\n{place.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Контактная информация ℹ️", "Contact information ℹ️" }[(int)language], $"Контактная информация\n{place.Id}"),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Маршруты", "Маршруты" }[(int)language], $"Маршруты\n{place.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Маршруты 🛣️", "Routes 🛣️" }[(int)language], $"Маршруты\n{place.Id}"),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithUrl(new List<string>(){ "Показать на карте", "Show on map" }[(int)language], string.Format(Settings.URLYandexOrganization, place.YIdOrganization)),
+                    InlineKeyboardButton.WithUrl(new List<string>(){ "Показать на карте 🗺️", "Show on map 🗺️" }[(int)language], string.Format(Settings.URLYandexOrganization, place.YIdOrganization)),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Места рядом", "Places nearby" }[(int)language], $"Места рядом\n{place.Id}"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Похожие места", "Related places" }[(int)language], $"Похожие места\n{place.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Места рядом 🏘️", "Places nearby 🏘️" }[(int)language], $"Места рядом\n{place.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Похожие места 🤲", "Related places 🤲" }[(int)language], $"Похожие места\n{place.Id}"),
                 },
             });
 
-            if(message == "Посоветуй место!")
-                keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
-                {
-                        InlineKeyboardButton.WithCallbackData(new List<string>(){ "Посоветуй ещё одно место!", "Can you recommend another place?" }[(int)language], "Посоветуй место!"),
-                }));
+            keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
+            {
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Посоветуй другое место! 🏞️", "Recommend another place! 🏞️" }[(int)language], "Посоветуй место!"),
+            }));
 
             if (user.Places.FirstOrDefault(p => p.Id == place.Id) == null)
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить в план на сегодня", "Add to today's plan" }[(int)language], $"В план\n{place.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Добавить в план на сегодня ✅", "Add to today's plan ✅" }[(int)language], $"В план\n{place.Id}"),
                 }));
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                 InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
-                 InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                 InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], "Назад"),
+                 InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -305,17 +308,17 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Редактировать план", "Edit the plan" }[(int)language], "Редактировать план"),
+                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Редактировать план ✏️", "Edit the plan ✏️" }[(int)language], "Редактировать план"),
             }));
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData(new List<string>() { "Очистить план", "Contact information" }[(int)language], "Очистить план"),
+                InlineKeyboardButton.WithCallbackData(new List<string>() { "Очистить план 🫥", "Contact information 🫥" }[(int)language], "Очистить план"),
             }));
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -327,8 +330,8 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
-                InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], "Назад"),
+                InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -341,14 +344,14 @@ namespace YolaGuide.Messages
             if (category == null)
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал!", "I chose everything!" }[(int)language], category == null ? $"Я все выбрал!\n" : $"Я все выбрал!\n{category.Id}"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал! ✅", "I chose everything! ✅" }[(int)language], category == null ? $"Я все выбрал!\n" : $"Я все выбрал!\n{category.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню")
                 }));
             else
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал!", "I chose everything!" }[(int)language], category == null ? $"Я все выбрал!\n" : $"Я все выбрал!\n{category.Id}"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>() { "Назад", "Back" }[(int)language], "Назад")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал! ✅", "I chose everything! ✅" }[(int)language], category == null ? $"Я все выбрал!\n" : $"Я все выбрал!\n{category.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>() { "Назад ↩️", "Back ↩️" }[(int)language], "Назад")
                 }));
 
             return keyboard;
@@ -361,13 +364,14 @@ namespace YolaGuide.Messages
             if(category != null)
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В план", "Into the plan" }[(int)language], "В план на сегодня"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В план 📋", "Into the plan 📋" }[(int)language], "В план на сегодня"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], "Назад")
                 }));
             else
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В план", "Into the plan" }[(int)language], "В план на сегодня"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В план 📋", "Into the plan 📋" }[(int)language], "В план на сегодня"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
                 }));
 
             return keyboard;
@@ -394,14 +398,14 @@ namespace YolaGuide.Messages
             if(category == null)
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал!", "I chose everything!" }[(int)language], category == null ? $"Я все выбрал!\n" : $"Я все выбрал!\n{category.Id}"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал! ✅", "I chose everything! ✅" }[(int)language], category == null ? $"Я все выбрал!\n" : $"Я все выбрал!\n{category.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню")
                 }));
             else
                 keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал!", "I chose everything!" }[(int)language], category == null ? $"Я все выбрал!\n" : $"Я все выбрал!\n{category.Id}"),
-                    InlineKeyboardButton.WithCallbackData(new List<string>() { "Назад", "Back" }[(int)language], "Назад")
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал! ✅", "I chose everything! ✅" }[(int)language], category == null ? $"Я все выбрал!\n" : $"Я все выбрал!\n{category.Id}"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>() { "Назад ↩️", "Back ↩️" }[(int)language], "Назад")
                 }));
 
             return keyboard;
@@ -422,7 +426,7 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], "Назад"),
             }));
 
             return keyboard;
@@ -440,8 +444,8 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], "Назад"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -455,8 +459,8 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], $"Назад"),
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], $"Назад"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -470,8 +474,8 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], $"Назад"),
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], $"Назад"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -485,8 +489,8 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], $"Назад"),
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], $"Назад"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -525,9 +529,9 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал!", "I chose everything!" }[(int)language], $"Я все выбрал!"),
-                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], "Назад"),
-                InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Я все выбрал! ✅", "I chose everything! ✅" }[(int)language], $"Я все выбрал!"),
+                InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], "Назад"),
+                InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -541,8 +545,8 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], $"Назад"),
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], $"Назад"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -556,7 +560,7 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -570,8 +574,8 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], $"Назад\n{place.Id}"),
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], $"Назад\n{place.Id}"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -606,8 +610,8 @@ namespace YolaGuide.Messages
 
             keyboard = new InlineKeyboardMarkup(keyboard.InlineKeyboard.Append(new List<InlineKeyboardButton>
             {
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад", "Back" }[(int)language], $"Назад\n{callback}"),
-                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню", "On the menu" }[(int)language], "Открыть меню"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "Назад ↩️", "Back ↩️" }[(int)language], $"Назад\n{callback}"),
+                   InlineKeyboardButton.WithCallbackData(new List<string>(){ "В меню 🏠", "On the menu 🏠" }[(int)language], "Открыть меню"),
             }));
 
             return keyboard;
@@ -673,12 +677,12 @@ namespace YolaGuide.Messages
             {
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Показать места", "Show the place" }[(int)language],  places[0..(places.Length - 1)]),
+                    InlineKeyboardButton.WithCallbackData(new List<string>(){ "Показать места 🏘️", "Show the place 🏘️" }[(int)language],  places[0..(places.Length - 1)]),
                 },
 
                 new InlineKeyboardButton[]
                 {
-                    InlineKeyboardButton.WithUrl(new List<string>(){ "Показать на карте", "Show on map" }[(int)language], string.Format(Settings.URLYandexRoute, coordinats[0..(coordinats.Length - 1)])),
+                    InlineKeyboardButton.WithUrl(new List<string>(){ "Показать на карте 🗺️", "Show on map 🗺️" }[(int)language], string.Format(Settings.URLYandexRoute, coordinats[0..(coordinats.Length - 1)])),
                 },
             });
         }

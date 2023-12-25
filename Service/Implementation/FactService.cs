@@ -24,6 +24,7 @@ namespace YolaGuide.Service.Implementation
                 {
                     Name = model.Name,
                     Description = model.Description,
+                    Image = model.Image
                 };
 
                 var response = await _factRepository.CreateAsync(fact);

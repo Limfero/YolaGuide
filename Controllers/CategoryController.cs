@@ -5,6 +5,7 @@ using YolaGuide.Domain.ViewModel;
 using YolaGuide.Domain.Enums;
 using YolaGuide.Messages;
 using YolaGuide.Service.Interfaces;
+using Telegram.Bot.Types.Enums;
 
 namespace YolaGuide.Controllers
 {
@@ -86,6 +87,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.EnteringCategoryName[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
                     break;
                 case Substate.GettingCategoryName:
@@ -98,6 +100,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.EnteringCategorySubcategory[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.CategorySelection(null, user.Language));
                     break;
@@ -114,6 +117,7 @@ namespace YolaGuide.Controllers
                            messageId: Settings.LastBotMsg[chatId].MessageId,
                            chatId: chatId,
                            text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           parseMode: ParseMode.Html,
                            cancellationToken: cancellationToken,
                            replyMarkup: Keyboard.PreferenceSelection(null, user.Language, user));
 
@@ -124,6 +128,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.EnteringCategorySubcategory[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.CategorySelection(GetCategoryById(int.Parse(message.Text)), user.Language));
                     break;
@@ -142,6 +147,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.SuccessfullyAdded[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.SuccessfullyAdded(user.Language));
                     break;
@@ -150,35 +156,40 @@ namespace YolaGuide.Controllers
             await Settings.UserController.UpdateUser(user);
         }
 
-        public async Task ClarificationOfPreferencesAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user)
+        public async Task ClarificationOfPreferencesAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken, Domain.Entity.User user, Language language)
         {
             var chatId = message.Chat.Id;
+
+            if (user == null)
+            {
+                await Settings.UserController.CreateUser(new UserViewModel() { Id = chatId, Username = message.Chat.Username == null ? "Anonimys" : message.Chat.Username });
+                user = Settings.UserController.GetUserById(chatId);
+                user.Language = language;
+
+                user.State = State.ClarificationOfPreferences;
+
+                await Settings.UserController.UpdateUser(user);
+
+                Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                    messageId: Settings.LastBotMsg[chatId].MessageId,
+                    chatId: chatId,
+                    text: Answer.ClarificationPreferences[(int)user.Language],
+                    parseMode: ParseMode.Html,
+                    cancellationToken: cancellationToken,
+                    replyMarkup: Keyboard.ClarificationPreferences(user.Language));
+                return;
+            }
 
             switch (user.Substate)
             {
                 case Substate.Start:
-                    if (user == null)
-                    {
-                        await Settings.UserController.CreateUser(new Domain.ViewModel.UserViewModel() { Id = chatId, Username = message.From.Username == null ? "Anonimys" : message.From.Username });
-                        user = Settings.UserController.GetUserById(chatId);
-
-                        user.State = State.ClarificationOfPreferences;
-
-                        Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
-                            messageId: Settings.LastBotMsg[chatId].MessageId,
-                            chatId: chatId,
-                            text: Answer.WelcomeMessage[(int)user.Language],
-                            cancellationToken: cancellationToken,
-                            replyMarkup: Keyboard.ClarificationPreferences(user.Language));
-                        break;
-                    }
-
                     user.Substate = Substate.GettingPreferencesCategories;
 
                     Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
                            messageId: Settings.LastBotMsg[chatId].MessageId,
                            chatId: chatId,
                            text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           parseMode: ParseMode.Html,
                            cancellationToken: cancellationToken,
                            replyMarkup: Keyboard.PreferenceSelection(null, user.Language, user));
                     break;
@@ -194,17 +205,14 @@ namespace YolaGuide.Controllers
                            messageId: Settings.LastBotMsg[chatId].MessageId,
                            chatId: chatId,
                            text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           parseMode: ParseMode.Html,
                            cancellationToken: cancellationToken,
                            replyMarkup: Keyboard.PreferenceSelection(null, user.Language, user));
-
                         break;
                     }
 
                     if (category.Subcategories.Count == 0)
                     {
-                        category.Subcategory = null;
-                        category.Places = null;
-
                         user.Categories.Add(category);
 
                         await Settings.UserController.UpdateUser(user);
@@ -216,6 +224,7 @@ namespace YolaGuide.Controllers
                            messageId: Settings.LastBotMsg[chatId].MessageId,
                            chatId: chatId,
                            text: Answer.ClarificationOfPreferences[(int)user.Language],
+                           parseMode: ParseMode.Html,
                            cancellationToken: cancellationToken,
                            replyMarkup: Keyboard.PreferenceSelection(category, user.Language, user));
                     break;
@@ -224,6 +233,7 @@ namespace YolaGuide.Controllers
                            messageId: Settings.LastBotMsg[chatId].MessageId,
                            chatId: chatId,
                            text: Answer.SuccessfullySetUpPreferences[(int)user.Language],
+                           parseMode: ParseMode.Html,
                            cancellationToken: cancellationToken,
                            replyMarkup: Keyboard.SuccessfullyCustomizedPreferences(user.Language));
                     break;
@@ -246,6 +256,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.DeleteCategory[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.CategorySelection(null, user.Language));
                     break;
@@ -268,13 +279,16 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.SuccessfullyDellete[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.Back(user.Language));
                     }
 
-                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                    Settings.LastBotMsg[chatId] = await botClient.EditMessageTextAsync(
+                        messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.DeleteCategory[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.CategorySelection(category, user.Language));
                     break;

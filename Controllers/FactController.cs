@@ -5,6 +5,7 @@ using YolaGuide.Domain.ViewModel;
 using YolaGuide.Messages;
 using YolaGuide.Domain.Entity;
 using YolaGuide.Service.Interfaces;
+using Telegram.Bot.Types.Enums;
 
 namespace YolaGuide.Controllers
 {
@@ -77,6 +78,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.EnteringFactName[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
                     break;
 
@@ -90,6 +92,7 @@ namespace YolaGuide.Controllers
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.EnteringFactDescription[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken);
                     break;
 
@@ -98,14 +101,36 @@ namespace YolaGuide.Controllers
                         break;
 
                     _newUserFact[chatId].Description = userInput;
-                    user.Substate = Substate.Start;
+                    user.Substate = Substate.End;
+
+                    Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.EnteringFactImage[(int)user.Language],
+                        parseMode: ParseMode.Html,
+                        cancellationToken: cancellationToken);
+                    break;
+
+                case Substate.End:
+                    var fileId = message.Photo.Last().FileId;
+                    var fileName = _newUserFact[chatId].Name.Split("\n\n\n")[0].Replace(" ", "");
+                    var destinationImagePath = Settings.DestinationImagePath + $"{fileName}Fact.png";
+
+                    await using (Stream fileStream = System.IO.File.Create(new string(destinationImagePath)))
+                    {
+                        var file = await botClient.GetInfoAndDownloadFileAsync(
+                            fileId: fileId,
+                            destination: fileStream,
+                            cancellationToken: cancellationToken);
+                    }
+
+                    _newUserFact[chatId].Image = $"{fileName}Fact.png";
 
                     await CreateAsync(_newUserFact[chatId]);
-                    _newUserFact[chatId] = new();
 
                     Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
                         chatId: chatId,
                         text: Answer.SuccessfullyAdded[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.SuccessfullyAdded(user.Language));
                     break;
@@ -127,6 +152,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.DeleteFact[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.GetAllFacts(user.Language, 1));
                     break;
@@ -142,6 +168,7 @@ namespace YolaGuide.Controllers
                         messageId: Settings.LastBotMsg[chatId].MessageId,
                         chatId: chatId,
                         text: Answer.SuccessfullyDellete[(int)user.Language],
+                        parseMode: ParseMode.Html,
                         cancellationToken: cancellationToken,
                         replyMarkup: Keyboard.Back(user.Language));
 
@@ -164,6 +191,7 @@ namespace YolaGuide.Controllers
                             messageId: Settings.LastBotMsg[chatId].MessageId,
                             chatId: chatId,
                             text: Answer.DeleteFact[(int)user.Language],
+                            parseMode: ParseMode.Html,
                             cancellationToken: cancellationToken,
                             replyMarkup: Keyboard.GetAllFacts(user.Language, page));
                     break;
