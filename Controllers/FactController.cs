@@ -112,7 +112,7 @@ namespace YolaGuide.Controllers
 
                 case Substate.End:
                     var fileId = message.Photo.Last().FileId;
-                    var fileName = _newUserFact[chatId].Name.Split("\n\n\n")[0].Replace(" ", "");
+                    var fileName = _newUserFact[chatId].Name.Split("\n\n\n")[0].Replace( " ", "").Replace("-", "").Replace("\"", "");
                     var destinationImagePath = Settings.DestinationImagePath + $"{fileName}Fact.png";
 
                     await using (Stream fileStream = System.IO.File.Create(new string(destinationImagePath)))
