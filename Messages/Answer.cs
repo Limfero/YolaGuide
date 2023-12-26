@@ -7,9 +7,9 @@ namespace YolaGuide.Messages
     public static class Answer
     {
         public static List<string> WelcomeMessage { get; set; } = new()
-        { 
-            "Привет, я Yola Guide! Я расскажу тебе о всех местах Йошкар-Олы.",
-            "Hi, I'm Yola Guide! I will tell you about all the places in Yoshkar-Ola."
+        {
+            "Привет, это Yola Guide. Я создан, чтобы сделать твою поездку в Йошкар-Олу незабываемой и увлекательной. 🌟\r\n\r\nЯ не просто бот, я твой друг и помощник. Я знаю все о Йошкар-Оле: её историю, культуру, достопримечательности, музеи, парки, рестораны, гостиницы и многое другое. Я могу подобрать для тебя лучшие варианты, исходя из твоих предпочтений. Я могу также рассказать тебе интересные факты о городе, дать полезные советы и рекомендации. 🗺\r\n\r\nЯ помогу тебе спланировать твой идеальный маршрут, который ты сможешь сохранить и отслеживать на карте. 📲\r\n\r\nЯ надеюсь, что ты полюбишь Йошкар-Олу так же, как люблю её я. Давай начнем наше путешествие! ✈",
+            "Hi, this is Yola Guide. I'm created to make your trip to Yoshkar-Ola unforgettable and exciting. 🌟\r\n\r\nI'm not just a bot, I'm your friend and assistant. I know everything about Yoshkar-Ola: its history, culture, sights, museums, parks, restaurants, hotels and much more. I can find the best options for you based on your preferences. I can also tell you interesting facts about the city, give you useful tips and recommendations. 🗺\r\n\r\nI'll help you plan your perfect itinerary that you can save and track on a map. 📲\r\n\r\nI hope you will love Yoshkar-Ola as much as I love it. Let's start our journey! ✈"
         };
 
         public static List<string> SelectingMenuButton { get; set; } = new()
