@@ -298,6 +298,13 @@ namespace YolaGuide
                 case "Русский":
                     if (user == null)
                     {
+                        Settings.LastBotMsg[chatId] = await botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: Answer.WelcomeMessage[(int)(callbackData == "Русский" ? Language.Russian : Language.English)],
+                        parseMode: ParseMode.Html,
+                        cancellationToken: cancellationToken,
+                        replyMarkup: Keyboard.ReplyMenu(chatId, callbackData == "Русский" ? Language.Russian : Language.English));
+
                         await Settings.CategoryController.ClarificationOfPreferencesAsync(botClient, message, cancellationToken, user, callbackData == "Русский" ? Language.Russian : Language.English);
                         break;
                     }
